@@ -4,8 +4,8 @@ workflows:
   test-and-deploy:
     jobs:
       - test
-      - test2:
-          allow_failure: true  # Move allow_failure to the workflow section
+      - test2
+          
 
 jobs:
   test:
