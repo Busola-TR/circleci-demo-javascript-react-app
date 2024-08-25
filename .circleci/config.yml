@@ -10,7 +10,7 @@ jobs:
   test:
     docker:
       - image: cimg/node:14.13.0
-        entrypoint: [""]  # Specify an empty entrypoint
+          
     steps:
       - checkout
       - run:
