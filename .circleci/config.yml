@@ -10,6 +10,7 @@ jobs:
   test:
     docker:
       - image: cimg/node:14.13.0
+        entrypoint: [""]  # Specify an empty entrypoint
     steps:
       - checkout
       - run:
@@ -22,13 +23,15 @@ jobs:
   test2:
     docker:
       - image: returntocorp/semgrep
+        entrypoint: [""]  # Specify an empty entrypoint
     steps:
       - checkout
       - run:
           name: Run SAST Test
-          command: semgrep ci --json  --output semgrep.json
+          command: semgrep ci --json --config p/javascript --output semgrep.json
       - store_artifacts:
           path: semgrep.json
           when: always
+
 
 
