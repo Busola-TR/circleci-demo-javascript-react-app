@@ -26,7 +26,7 @@ jobs:
       - checkout
       - run:
           name: Run SAST Test
-          command: semgrep ci --json --config p/javascript --output semgrep.json
+          command: semgrep ci --json  --output semgrep.json
       - store_artifacts:
           path: semgrep.json
           when: always
