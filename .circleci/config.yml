@@ -4,7 +4,8 @@ workflows:
   test-and-deploy:
     jobs:
       - test
-      - test2
+      - test2:
+          allow_failure: true  # Move allow_failure to the workflow section
 
 jobs:
   test:
@@ -27,8 +28,8 @@ jobs:
       - run:
           name: Run SAST Test
           command: semgrep ci --json --config p/javascript --output semgrep.json
-    allow_failure: true
     artifacts:
       when: always
       paths:
         - semgrep.json
+
