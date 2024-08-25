@@ -1,32 +1,34 @@
 version: 2.1
+
 workflows:
- test-and-deploy:
-   jobs:
-     - test
-     - test2
+  test-and-deploy:
+    jobs:
+      - test
+      - test2
 
 jobs:
- test:
-   docker:
+  test:
+    docker:
       - image: cimg/node:14.13.0
-   steps:
+    steps:
       - checkout
       - run:
-         name: Install dependencies
-         command: npm install
+          name: Install dependencies
+          command: npm install
       - run:
-          name: run Test
+          name: Run Test
           command: npm run test
+
   test2:
-     docker:
-        - image: returntocorp/semgrep
-     steps:
-       - checkout
-       - run:
-         name: run sast test
-         command: semgrep ci --json --config p/javascript --output semgrep.json  
-     allow_failure: true
-     artifacts:
-          when: always
-          paths:
-            - semgrep.json
+    docker:
+      - image: returntocorp/semgrep
+    steps:
+      - checkout
+      - run:
+          name: Run SAST Test
+          command: semgrep ci --json --config p/javascript --output semgrep.json
+    allow_failure: true
+    artifacts:
+      when: always
+      paths:
+        - semgrep.json
