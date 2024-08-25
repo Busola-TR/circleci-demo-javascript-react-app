@@ -3,6 +3,7 @@ workflows:
  test-and-deploy:
    jobs:
      - test
+     - test2
 
 jobs:
  test:
@@ -16,3 +17,16 @@ jobs:
       - run:
           name: run Test
           command: npm run test
+   test2:
+     docker:
+        - image: returntocorp/semgrep
+     steps:
+       - checkout
+       - run:
+         name: run sast test
+         command: semgrep ci --json --config p/javascript --output semgrep.json  
+     allow_failure: true
+     artifacts:
+          when: always
+          paths:
+            - semgrep.json
