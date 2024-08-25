@@ -7,9 +7,9 @@ workflows:
 
 jobs:
  test:
-  docker:
+   docker:
       - image: cimg/node:14.13.0
-  steps:
+   steps:
       - checkout
       - run:
          name: Install dependencies
@@ -17,7 +17,7 @@ jobs:
       - run:
           name: run Test
           command: npm run test
-   test2:
+  test2:
      docker:
         - image: returntocorp/semgrep
      steps:
