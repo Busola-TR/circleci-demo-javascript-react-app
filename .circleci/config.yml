@@ -7,7 +7,7 @@ workflows:
 jobs:
   docker-test:
    docker:
-    - image: circleci/node:9.8.0-stretch-browsers
+    - image:  cimg/base:2023.04
    steps:
     - checkout
     - setup_remote_docker:
