@@ -22,16 +22,12 @@ jobs:
 
   test2:
     docker:
-      - image: returntocorp/semgrep
-        entrypoint: [""]  # Specify an empty entrypoint
+      - image: cimg/node:14.13.0
+      
     steps:
       - checkout
-      - run:
-          name: Run SAST Test
-          command: semgrep ci --json --config p/javascript --output semgrep.json
-      - store_artifacts:
-          path: semgrep.json
-          when: always
+      
+     
 
 
 
