@@ -8,6 +8,6 @@ jobs:
  test:
   docker:
       - image: cimg/node:22.7.0
-    steps:
+  steps:
       - checkout
       - run: node --version
