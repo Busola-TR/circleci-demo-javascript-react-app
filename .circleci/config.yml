@@ -19,7 +19,7 @@ version: 2.1
 executors:
   default-executor:
     docker:
-      - image: circleci/python:3.8  # This image is a good base for installing additional tools
+      - image: cimg/python:3.8  # This image is a good base for installing additional tools
 
 jobs:
   trivy-scan:
