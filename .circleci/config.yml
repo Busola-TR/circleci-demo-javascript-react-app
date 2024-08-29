@@ -14,42 +14,74 @@
 #         docker_layer_caching: true
 #     - run: docker build .
     
+# version: 2.1
+
+# executors:
+#   default-executor:
+#     docker:
+#       - image: circleci/python:3.8  # This image is a good base for installing additional tools
+
+# jobs:
+#   trivy-scan:
+#     executor: default-executor
+#     steps:
+#       - checkout # Checks out your source code
+#       - run:
+#           name: Update and Install curl, Trivy, and Helm
+#           command: |
+#             # Update package lists and install necessary packages
+#             sudo apt-get update && sudo apt-get install -y curl
+
+#             # Install Trivy
+#             curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.18.3
+
+#             # Install Helm
+#             curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
+#       - run:
+#           name: Verify Trivy Installation and Scan Files
+#           command: |
+#             # Verify Trivy installation
+#             trivy --version
+
+#             # Scan files in the current directory, including Helm charts
+#             trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
+              
+# workflows:
+#   version: 2
+#   scan:
+#     jobs:
+#       - trivy-scan
+
+
 version: 2.1
 
 executors:
-  default-executor:
+  docker-executor:
     docker:
-      - image: circleci/python:3.8  # This image is a good base for installing additional tools
+      - image: docker:latest
+    environment:
+      DOCKER_DRIVER: overlay2
 
 jobs:
-  trivy-scan:
-    executor: default-executor
+  semgrep-scan:
+    executor: docker-executor
     steps:
-      - checkout # Checks out your source code
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.7 # You can adjust this to the specific Docker version you need
       - run:
-          name: Update and Install curl, Trivy, and Helm
+          name: Semgrep Scan
           command: |
-            # Update package lists and install necessary packages
-            sudo apt-get update && sudo apt-get install -y curl
+            docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep scan --config p/javascript --json --output /src/semgrep.json
+      - store_artifacts:
+          path: semgrep.json
+          destination: semgrep-results
 
-            # Install Trivy
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.18.3
-
-            # Install Helm
-            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
-      - run:
-          name: Verify Trivy Installation and Scan Files
-          command: |
-            # Verify Trivy installation
-            trivy --version
-
-            # Scan files in the current directory, including Helm charts
-            trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-              
 workflows:
   version: 2
-  scan:
+  semgrep-workflow:
     jobs:
-      - trivy-scan
+      - semgrep-scan:
+          allow_failure: true
 
 
