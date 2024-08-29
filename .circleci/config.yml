@@ -46,12 +46,25 @@ jobs:
             # Scan files in the current directory, including Helm charts
             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
             trivy fs .
+            
+  semgrep-full-scan:
+    docker:
+      - image: semgrep/semgrep
+    steps:
+      - checkout
+      - run:
+          name: "Semgrep OSS full scan"
+          command: semgrep ci --config auto --output semgrep.json    
+      - store_artifacts:
+          path: semgrep.json
+          destination: semgrep.json
               
 workflows:
   version: 2
   scan:
     jobs:
       - trivy-scan
+      - semgrep-full-scan
 
 
 
