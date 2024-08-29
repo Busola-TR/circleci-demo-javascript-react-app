@@ -45,7 +45,7 @@ jobs:
 
             # Scan files in the current directory, including Helm charts
             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-            trivy fs circleci-demo-javascript-react-app/blob/main/package.json
+            trivy config circleci-demo-javascript-react-app/blob/main/package.json
               
 workflows:
   version: 2
