@@ -14,7 +14,6 @@
 #         docker_layer_caching: true
 #     - run: docker build .
     
-
 version: 2.1
 
 executors:
@@ -30,8 +29,12 @@ jobs:
       - attach_workspace:
           at: ~/repo
       - run:
-          name: Install Trivy
+          name: Install curl and Trivy
           command: |
+            # Install curl
+            apk add --no-cache curl
+
+            # Install Trivy
             curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.18.3
       - run:
           name: Scan Docker image with Trivy
