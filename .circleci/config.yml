@@ -19,7 +19,7 @@ version: 2.1
 executors:
   default-executor:
     docker:
-      - image: circleci/python:3.8 # Using a basic Python image as a base
+      - image: circleci/python:3.8  # This image is a good base for installing additional tools
 
 jobs:
   trivy-scan:
@@ -27,20 +27,18 @@ jobs:
     steps:
       - checkout # Checks out your source code
       - run:
-          name: Install curl and Trivy
+          name: Update and Install curl, Trivy, and Helm
           command: |
-            # Install curl
-            apt-get update && apt-get install -y curl
+            # Update package lists and install necessary packages
+            sudo apt-get update && sudo apt-get install -y curl
 
             # Install Trivy
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.18.3
-      - run:
-          name: Install Helm
-          command: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.18.3
+
             # Install Helm
-            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
       - run:
-          name: Scan files with Trivy
+          name: Verify Trivy Installation and Scan Files
           command: |
             # Verify Trivy installation
             trivy --version
@@ -53,6 +51,5 @@ workflows:
   scan:
     jobs:
       - trivy-scan
-
 
 
