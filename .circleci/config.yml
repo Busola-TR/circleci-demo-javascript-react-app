@@ -17,44 +17,42 @@
 version: 2.1
 
 executors:
-  docker-executor:
+  default-executor:
     docker:
-      - image: docker:24
-    # Note: No services key here. Services are defined at the job level.
+      - image: circleci/python:3.8 # Using a basic Python image as a base
 
 jobs:
   trivy-scan:
-    executor: docker-executor
+    executor: default-executor
     steps:
       - checkout # Checks out your source code
-      - setup_remote_docker:
-          version: 24
-          docker_layer_caching: true # Optional, speeds up Docker builds
       - run:
           name: Install curl and Trivy
           command: |
             # Install curl
-            apk add --no-cache curl
+            apt-get update && apt-get install -y curl
 
             # Install Trivy
             curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.18.3
       - run:
-          name: Scan Docker image with Trivy
+          name: Install Helm
           command: |
-            # Verify Docker service is available
-            docker info
+            # Install Helm
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - run:
+          name: Scan files with Trivy
+          command: |
+            # Verify Trivy installation
+            trivy --version
 
-            # Run the Trivy scan
-            docker run --rm \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -v ~/Library/Caches:/root/.cache/ \
-              aquasec/trivy:0.18.3 \
-              $IMAGE_NAME:$CI_COMMIT_SHA
-
+            # Scan files in the current directory, including Helm charts
+            trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
+              
 workflows:
   version: 2
   scan:
     jobs:
       - trivy-scan
+
 
 
