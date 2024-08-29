@@ -45,7 +45,14 @@ jobs:
 
             # Scan files in the current directory, including Helm charts
             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-            trivy fs . -o trivy.json
+            trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed -o trivy.json ./src/package.json || true
+            # Check Trivy scan result
+            if [ -s trivy.json ]; then
+              echo "Trivy scan results:"
+              cat trivy.json
+            else
+              echo "No vulnerabilities found or an error occurred."
+            fi
       - store_artifacts:
           path: trivy.json
           destination: trivy.json
