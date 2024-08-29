@@ -20,17 +20,16 @@ executors:
   docker-executor:
     docker:
       - image: docker:24
-    # Specify Docker service to enable Docker-in-Docker
-    resource_class: small
-    # Define Docker service for Docker-in-Docker
-    services:
-      - docker
+    # Note: No services key here. Services are defined at the job level.
 
 jobs:
   trivy-scan:
     executor: docker-executor
     steps:
       - checkout # Checks out your source code
+      - setup_remote_docker:
+          version: 24
+          docker_layer_caching: true # Optional, speeds up Docker builds
       - run:
           name: Install curl and Trivy
           command: |
@@ -57,4 +56,5 @@ workflows:
   scan:
     jobs:
       - trivy-scan
+
 
