@@ -45,7 +45,10 @@ jobs:
 
             # Scan files in the current directory, including Helm charts
             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-            trivy fs .
+            trivy fs . -o trivy.json
+      - store_artifacts:
+          path: trivy.json
+          destination: trivy.json
             
   semgrep-full-scan:
     docker:
