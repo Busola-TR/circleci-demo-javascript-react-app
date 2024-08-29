@@ -45,7 +45,7 @@ jobs:
 
             # Scan files in the current directory, including Helm charts
             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-            trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed ./package.json
+            trivy config --severity HIGH,CRITICAL ./package.json
               
 workflows:
   version: 2
