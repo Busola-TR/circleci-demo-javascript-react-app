@@ -1,16 +1,50 @@
+# version: 2.1
+# workflows: 
+#  workflow-1:
+#   jobs:
+#    - docker-test
+
+# jobs:
+#   docker-test:
+#    docker:
+#     - image: cimg/node:17.2-browsers
+#    steps:
+#     - checkout
+#     - setup_remote_docker:
+#         docker_layer_caching: true
+#     - run: docker build .
+    
+
 version: 2.1
-workflows: 
- workflow-1:
-  jobs:
-   - docker-test
+
+executors:
+  docker-executor:
+    docker:
+      - image: docker:24
 
 jobs:
-  docker-test:
-   docker:
-    - image: cimg/node:17.2-browsers
-   steps:
-    - checkout
-    - setup_remote_docker:
-        docker_layer_caching: true
-    - run: docker build .
-    
+  trivy-scan:
+    executor: docker-executor
+    steps:
+      - checkout # Checks out your source code
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Install Trivy
+          command: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.18.3
+      - run:
+          name: Scan Docker image with Trivy
+          command: |
+            # Ensure Docker is running
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v ~/Library/Caches:/root/.cache/ \
+              aquasec/trivy:0.18.3 \
+              $IMAGE_NAME:$CI_COMMIT_SHA
+
+workflows:
+  version: 2
+  scan:
+    jobs:
+      - trivy-scan
