@@ -72,7 +72,7 @@ jobs:
       - run:
           name: Semgrep Scan
           command: |
-            docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep scan --config p/javascript --json --output /src/semgrep.json
+            docker run --rm -v "$(pwd):/src" semgrep/semgrep semgrep scan --config p/javascript --json --output /src/semgrep.json || echo "Semgrep scan failed but continuing"
       - store_artifacts:
           path: semgrep.json
           destination: semgrep-results
@@ -81,7 +81,7 @@ workflows:
   version: 2
   semgrep-workflow:
     jobs:
-      - semgrep-scan:
-          continue-on-error: true
+      - semgrep-scan
+
 
 
