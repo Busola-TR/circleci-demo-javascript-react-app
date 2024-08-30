@@ -70,30 +70,37 @@ jobs:
           path: semgrep.json
           destination: semgrep.json
 
-  gitleaks-scan:
+   gitleaks-scan:
     docker:
-      - image: cimg/python:3.8 
+      - image: circleci/python:3.8
     steps:
       - checkout
-      - run:
-          name: Install Gitleaks
-          command: |
-            curl -sSfL https://github.com/zricethezav/gitleaks/releases/download/v8.10.3/gitleaks-linux-amd64.tar.gz | tar -zx && sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
-      - run:
-          name: Run Gitleaks Scan for Secrets
-          command: |
-            gitleaks detect --source . --report-format json --report-path gitleaks-report.json
 
-            if [ -s gitleaks-report.json ]; then
-              echo "Gitleaks found leaks. Failing pipeline."
-              cat gitleaks-report.json
-              exit 1
-            else
-              echo "No leaks found by Gitleaks. Continuing pipeline."
-            fi
+      - run:
+          name: Pull Gitleaks Docker Image
+          command: |
+            docker pull zricethezav/gitleaks:latest
+
+      - run:
+          name: Run Gitleaks Scan
+          command: |
+            docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
+
+      - run:
+          name: Display CI Directory Contents After Gitleaks
+          command: |
+            echo "Contents of the project directory (CI_PROJECT_DIR) after Gitleaks run:"
+            ls -la "$PWD"
+
+      - run:
+          name: Display /app Directory Inside Docker Container
+          command: |
+            docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest ls -la /app
+
       - store_artifacts:
-          path: gitleaks-report.json
-          destination: gitleaks-report.json
+          path: gitleaks.json
+          destination: gitleaks.json
+          when: always
               
 workflows:
   version: 2
