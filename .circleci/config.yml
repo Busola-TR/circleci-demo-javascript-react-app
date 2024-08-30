@@ -112,17 +112,17 @@ jobs:
       - run:
           name: Display CI Directory Contents After Gitleaks
           command: |
-            echo "Contents of the project directory (CI_PROJECT_DIR) after Gitleaks run:"
+            echo "Contents of the project directory after Gitleaks run:"
             ls -la "$PWD"
       - run:
-          name: Display /app Directory Inside Docker Container
+          name: Display /app Directory Contents
           command: |
-            docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest ls -la /app
+            echo "Contents of the /app directory in the container:"
+            docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest /bin/sh -c "ls -la /app"
       - store_artifacts:
           path: gitleaks.json
           destination: gitleaks.json
           when: always
-              
 workflows:
   version: 2
   scan:
