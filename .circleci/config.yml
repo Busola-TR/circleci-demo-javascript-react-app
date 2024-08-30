@@ -70,7 +70,7 @@ jobs:
           path: semgrep.json
           destination: semgrep.json
 
-   gitleaks-scan:
+  gitleaks-scan:
     docker:
       - image: circleci/python:3.8
     steps:
