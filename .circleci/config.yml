@@ -72,7 +72,7 @@ jobs:
 
   gitleaks-scan:
     docker:
-      - image: circleci/python:3.8
+      - image: zricethezav/gitleaks:latest
     steps:
       - checkout
 
