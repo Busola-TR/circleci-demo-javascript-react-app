@@ -23,8 +23,8 @@ version: 2.1
 
 jobs:
   trivy-scan:
-    docker:
-     machine: true
+    docker: cimg/python:3.8
+     image: 
      steps:
        - checkout # Checks out your source code
        - run:
@@ -71,32 +71,27 @@ jobs:
           destination: semgrep.json
 
   gitleaks-scan:
-    docker:
-      - image: cimg/python:3.8
+    machine:
+      image: ubuntu-2204:2024.05.1
     steps:
       - checkout
-
       - run:
           name: Pull Gitleaks Docker Image
           command: |
             docker pull zricethezav/gitleaks:latest
-
       - run:
           name: Run Gitleaks Scan
           command: |
             docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
-
       - run:
           name: Display CI Directory Contents After Gitleaks
           command: |
             echo "Contents of the project directory (CI_PROJECT_DIR) after Gitleaks run:"
             ls -la "$PWD"
-
       - run:
           name: Display /app Directory Inside Docker Container
           command: |
             docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest ls -la /app
-
       - store_artifacts:
           path: gitleaks.json
           destination: gitleaks.json
