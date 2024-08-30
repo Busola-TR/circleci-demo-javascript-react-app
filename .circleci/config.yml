@@ -96,28 +96,30 @@ jobs:
   #         path: gitleaks.json
   #         destination: gitleaks.json
   #         when: always
-  gitleaks-scan:
-    machine:
-      image: ubuntu-2004:current
+  gitleaks_scan:
+    docker:
+      - image: cimg/base:stable
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 20.10.14
       - run:
           name: Pull Gitleaks Docker Image
-          command: |
-            docker pull zricethezav/gitleaks:latest
+          command: docker pull zricethezav/gitleaks:latest
       - run:
           name: Run Gitleaks Scan
           command: |
             docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
+          no_output_timeout: 30m
       - run:
-          name: Display CI Directory Contents After Gitleaks
+          name: Display Contents of Working Directory
           command: |
-            echo "Contents of the project directory after Gitleaks run:"
+            echo "Contents of working directory after Gitleaks run:"
             ls -la "$PWD"
       - run:
-          name: Display /app Directory Contents
+          name: Display Contents of /app Directory in Docker Container
           command: |
-            echo "Contents of the /app directory in the container:"
+            echo "Contents of /app directory inside Docker container:"
             docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest /bin/sh -c "ls -la /app"
       - store_artifacts:
           path: gitleaks.json
