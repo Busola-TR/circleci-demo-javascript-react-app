@@ -24,10 +24,10 @@ version: 2.1
 jobs:
   trivy-scan:
     docker:
-      - image: cimg/python:3.8 
-    steps:
-      - checkout # Checks out your source code
-      - run:
+     machine: true
+     steps:
+       - checkout # Checks out your source code
+       - run:
           name: Update and Install curl, Trivy, and Helm
           command: |
             # Update package lists and install necessary packages
