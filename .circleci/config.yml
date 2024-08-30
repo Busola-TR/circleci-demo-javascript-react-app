@@ -15,7 +15,11 @@
 #     - run: docker build .
     
 version: 2.1
-
+executors:
+  docker-executor:
+    docker:
+      - image: circleci/python:3.8
+    working_directory: ~/repo
 # executors:
 #   default-executor:
 #     docker:
@@ -96,20 +100,23 @@ jobs:
   #         path: gitleaks.json
   #         destination: gitleaks.json
   #         when: always
+
+
+
   gitleaks-scan:
-    docker:
-      - image: zricethezav/gitleaks:latest
+    executor: docker-executor
     steps:
-      - checkout
+      - checkout # Checkout the source code
+
       - run:
-          name: Run Gitleaks Scan
-          command:  docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
+          name: Run Gitleaks Scan via Docker
+          command: |
+            # Run the Gitleaks Docker image with the project directory mounted as /app
+            docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
+
       - store_artifacts:
           path: gitleaks.json
           destination: gitleaks.json
-      - run:
-          name: Allow Failure
-          command: echo "Gitleaks job allowed to fail" || true
 workflows:
   version: 2
   scan:
