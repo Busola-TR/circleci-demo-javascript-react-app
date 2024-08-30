@@ -98,19 +98,25 @@ jobs:
   #         when: always
   gitleaks-scan:
     docker:
-      - image: zricethezav/gitleaks:latest
+      - image: cimg/python:3.8  # Use a Python Docker image
     steps:
-      - checkout
+      - checkout  # Checks out your source code
+
       - run:
-          name: Run Gitleaks Scan
-          command: docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
-          # command: gitleaks detect --verbose --source . -f json -r gitleaks.json
+          name: Download and Run Gitleaks Script
+          command: |
+            bash <(curl -s https://raw.githubusercontent.com/zricethezav/gitleaks-ci/master/gitleaks.sh)
+
+      - run:
+          name: Display CI Directory Contents After Gitleaks
+          command: |
+            echo "Contents of the project directory after Gitleaks run:"
+            ls -la "$PWD"
+
       - store_artifacts:
-          path: gitleaks.json
-          destination: gitleaks.json
-      - run:
-          name: Allow Failure
-          command: echo "Gitleaks job allowed to fail" || true
+          path: gitleaks-report.json
+          destination: gitleaks-report.json
+          when: always
               
 workflows:
   version: 2
