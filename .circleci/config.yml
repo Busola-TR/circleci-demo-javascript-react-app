@@ -34,7 +34,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y curl
 
             # Install Trivy
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.18.3
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.54.1
 
             # Install Helm
             curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
@@ -69,12 +69,38 @@ jobs:
       - store_artifacts:
           path: semgrep.json
           destination: semgrep.json
+
+  gitleaks-scan:
+    docker:
+      - image: cimg/python:3.8 
+    steps:
+      - checkout
+      - run:
+          name: Install Gitleaks
+          command: |
+            curl -sSfL https://github.com/zricethezav/gitleaks/releases/download/v8.10.3/gitleaks-linux-amd64.tar.gz | tar -zx && sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
+      - run:
+          name: Run Gitleaks Scan for Secrets
+          command: |
+            gitleaks detect --source . --report-format json --report-path gitleaks-report.json
+
+            if [ -s gitleaks-report.json ]; then
+              echo "Gitleaks found leaks. Failing pipeline."
+              cat gitleaks-report.json
+              exit 1
+            else
+              echo "No leaks found by Gitleaks. Continuing pipeline."
+            fi
+      - store_artifacts:
+          path: gitleaks-report.json
+          destination: gitleaks-report.json
               
 workflows:
   version: 2
   scan:
     jobs:
       - trivy-scan
+      - gitleaks-scan
       - semgrep-full-scan
 
 
