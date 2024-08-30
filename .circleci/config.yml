@@ -96,7 +96,7 @@ jobs:
   #         path: gitleaks.json
   #         destination: gitleaks.json
   #         when: always
-   gitleaks-scan:
+  gitleaks-scan:
     docker:
       - image: zricethezav/gitleaks:latest
     steps:
