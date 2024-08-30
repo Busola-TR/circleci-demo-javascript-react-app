@@ -103,7 +103,8 @@ jobs:
       - checkout
       - run:
           name: Run Gitleaks Scan
-          command: gitleaks detect --verbose --source . -f json -r gitleaks.json
+          command: docker run --rm -v "$PWD":/app zricethezav/gitleaks:latest detect --source /app -f json -r /app/gitleaks.json
+          # command: gitleaks detect --verbose --source . -f json -r gitleaks.json
       - store_artifacts:
           path: gitleaks.json
           destination: gitleaks.json
