@@ -77,7 +77,10 @@ jobs:
       - run:
           name: Run Checkov
           command: |
-            checkov --directory .
+            checkov --directory . --output-file checkov.json --output json
+      - store_artifacts:
+          path: checkov.json
+          destination: checkov-reports
 
 
 
