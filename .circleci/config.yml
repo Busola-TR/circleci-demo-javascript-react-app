@@ -64,7 +64,7 @@ jobs:
       - checkout
       - run:
           name: "Semgrep OSS full scan"
-          command: semgrep ci --config p/javascript --output semgrep.json    
+          command: semgrep ci --config auto --output semgrep.json    
       - store_artifacts:
           path: semgrep.json
           destination: semgrep.json
