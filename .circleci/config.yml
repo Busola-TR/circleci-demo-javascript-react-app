@@ -105,12 +105,16 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Make Dependency Check Script Executable
+          command: |
+            chmod +x scripts/dependency-check.sh
+      - run:
           name: Run OWASP Dependency Check
           command: |
-            dependency-check --project "CircleCI Project" --out . --format XML --scan .
+           ./scripts/dependency-check.sh
       - store_artifacts:
-          path: dependency-check-report.xml
-          destination: owasp-reports
+          path: odc-reports
+          destination: owasp-dependency-check-reports
 workflows:
   version: 2
   scan:
