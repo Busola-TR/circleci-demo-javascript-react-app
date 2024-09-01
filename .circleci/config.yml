@@ -105,6 +105,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Docker
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+      - run:
           name: Make Dependency Check Script Executable
           command: |
             chmod +x scripts/dependency-check.sh
