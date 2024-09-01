@@ -71,7 +71,7 @@ jobs:
           
   iac-checkov:
     docker:
-      - image: bridgecrew/checkov:latest
+      - image: bridgecrew/checkov:3.2.238
     steps:
       - checkout
       - run:
