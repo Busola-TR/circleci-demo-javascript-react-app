@@ -101,7 +101,7 @@ jobs:
 
   owasp-dependency-check:
     docker:
-      - image: cimg/python:3.11 
+      - image: cimg/python:3.8
     steps:
       - checkout
       - run:
