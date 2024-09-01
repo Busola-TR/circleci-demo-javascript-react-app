@@ -98,6 +98,19 @@ jobs:
       - run:
           name: Allow Failure
           command: echo "Gitleaks job allowed to fail" || true
+
+   owasp-dependency-check:
+    docker:
+      - image: owasp/dependency-check:10.0.3
+    steps:
+      - checkout
+      - run:
+          name: Run OWASP Dependency Check
+          command: |
+            dependency-check --project "CircleCI Project" --out . --format XML --scan .
+      - store_artifacts:
+          path: dependency-check-report.xml
+          destination: owasp-reports
 workflows:
   version: 2
   scan:
