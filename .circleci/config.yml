@@ -119,6 +119,7 @@ workflows:
       - iac-checkov
       - gitleaks-scan
       - semgrep-full-scan
+      - owasp-dependency-check
 
 
 
