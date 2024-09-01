@@ -15,6 +15,8 @@
 #     - run: docker build .
     
 version: 2.1
+orbs:
+  owasp: entur/owasp@1.0.6
 
 #   default-executor:
 #     docker:
@@ -104,11 +106,8 @@ jobs:
       - image: cimg/python:3.8
     steps:
       - checkout
-      - run:
-          name: Install Docker
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y docker.io
+      - setup_remote_docker:
+          version: 20.10.14
       - run:
           name: Make Dependency Check Script Executable
           command: |
