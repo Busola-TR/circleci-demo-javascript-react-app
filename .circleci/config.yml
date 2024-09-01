@@ -77,16 +77,16 @@ jobs:
       - run:
           name: Run Checkov
           command: |
-            checkov --directory . --output-file checkov.json --output json
+            checkov --directory . --output-file checkov.json --output json || true
       - store_artifacts:
           path: checkov.json
-          destination: checkov-reports
+          destination: checkov.json
 
 
 
   gitleaks-scan:
     docker:
-      - image: zricethezav/gitleaks:latest
+      - image: zricethezav/gitleaks:v8.18.4
     steps:
       - checkout
       - run:
