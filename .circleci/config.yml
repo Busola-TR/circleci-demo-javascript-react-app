@@ -99,7 +99,7 @@ jobs:
           name: Allow Failure
           command: echo "Gitleaks job allowed to fail" || true
 
- owasp-dependency-check:
+  owasp-dependency-check:
     docker:
       - image: owasp/dependency-check:10.0.3
     steps:
