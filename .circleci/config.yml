@@ -101,7 +101,7 @@ jobs:
 
   owasp-dependency-check:
     docker:
-      - image: owasp/dependency-check:10.0.3
+      - image: circleci/python:3.11
     steps:
       - checkout
       - run:
