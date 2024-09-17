@@ -347,17 +347,3 @@ workflows:
   scan_workflow:
     jobs:
       - dependency_check
-
-
-
-
-
-
-
-
-
-
-
-
-
-
