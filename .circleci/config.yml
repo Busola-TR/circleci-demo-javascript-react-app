@@ -220,38 +220,29 @@ jobs:
   run-owasp-scan:
     docker:
       - image: owasp/dependency-check:latest
-        user: root
+        user: root  # Switch to root user
     steps:
       - checkout
       - run:
-          name: "Find dependency-check.sh"
+          name: "Install AWS CLI"
           command: |
-            find / -name dependency-check.sh
-
-    # docker:
-    #   - image: owasp/dependency-check:latest
-    #     user: root  # Switch to root user
-    # steps:
-    #   - checkout
-    #   - run:
-    #       name: "Install AWS CLI"
-    #       command: |
-    #         apk add --no-cache aws-cli
-    #   - run:
-    #       name: "Download OWASP Data from S3"
-    #       command: |
-    #         aws s3 sync s3://owasp-dependency-cache /tmp/owasp-data
-    #   - run:
-    #       name: "Run OWASP Dependency-Check"
-    #       command: |
-    #         dependency-check.sh --scan . \
-    #           --format "XML" \
-    #           --project "My Project" \
-    #           --out /tmp/dependency-check-report \
-    #           --data /tmp/owasp-data  # Use the downloaded OWASP data
-    #   - store_artifacts:
-    #       path: /tmp/dependency-check-report
-    #       destination: dependency-check-report
+            apk add --no-cache aws-cli
+      - run:
+          name: "Download OWASP Data from S3"
+          command: |
+            aws s3 sync s3://owasp-dependency-cache /tmp/owasp-data
+      - run:
+          name: "Run OWASP Dependency-Check"
+          command: |
+             $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --scan $(pwd) \
+              --scan . \
+              --format "XML" \
+              --project "My Project" \
+              --out /tmp/dependency-check-report \
+              --data /tmp/owasp-data  # Use the downloaded OWASP data
+      - store_artifacts:
+          path: /tmp/dependency-check-report
+          destination: dependency-check-report
 
 workflows:
   version: 2
