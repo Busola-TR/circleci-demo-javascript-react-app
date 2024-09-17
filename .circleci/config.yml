@@ -321,7 +321,7 @@ jobs:
             mkdir -p /tmp/report
             ./dependency-check/bin/dependency-check.sh \
               --scan . \
-              --format "XML" \
+              --format "ALL" \
               --out /tmp/report \
               --data $HOME/OWASP-Dependency-Check/data \
               --noupdate \
