@@ -128,7 +128,7 @@
 #       - semgrep-full-scan
 #       - owasp-dependency-check
 
-vrsion: 2.1
+version: 2.1
 
 workflows:
   owasp_workflow:
