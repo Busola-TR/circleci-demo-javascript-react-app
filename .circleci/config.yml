@@ -147,7 +147,6 @@ workflows:
             branches:
               only:
                 - main  # Run scans on develop or any feature branches
-
 jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
@@ -157,21 +156,29 @@ jobs:
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
-
-# mkdir owasp-folder
+            # Create a folder for the OWASP data
+            mkdir owasp-folder
+            
+            # Fetch the latest Dependency Check version
             LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
 
-# Remove the 'v' prefix if it exists
+            # Remove the 'v' prefix if it exists
             VERSION_NUMBER=$(echo "$LATEST_VERSION" | sed 's/^v//')
+
+            # Download and unzip the latest version of Dependency Check
             wget https://github.com/jeremylong/DependencyCheck/releases/download/v$VERSION_NUMBER/dependency-check-$VERSION_NUMBER-release.zip
             unzip dependency-check-$VERSION_NUMBER-release.zip
 
-
+            # Run the dependency-check with the OWASP folder for storing the DB
             dependency-check/bin/dependency-check.sh -s . -d /owasp-folder
 
+            # Generate a commit message and random suffix for the file name
             msg_commit=$(date +%H_%M_%d_%m_%Y)
             suffix_file_name=$(head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 50)
+
+            # Additional commands for handling updates or other actions
             # dependency-check.sh --updateonly --data /tmp/owasp-data
+
   #     - run:
   #         name: "Upload ODC Data to S3"
   #         command: |
