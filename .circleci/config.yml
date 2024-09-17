@@ -285,74 +285,62 @@ version: 2.1
 jobs:
   dependency_check:
     docker:
-      - image: circleci/python:3.8
+      - image: owasp/dependency-check:latest
     steps:
       - checkout
 
-      # Install AWS CLI
+      # Check Dependency-Check version
       - run:
-          name: Install AWS CLI
-          command: |
-            sudo apt-get update && sudo apt-get install -y awscli
+          name: Check Dependency-Check Version
+          command: /usr/share/dependency-check/bin/dependency-check.sh --version
 
-      # Setup Docker for running OWASP Dependency-Check
-      - setup_remote_docker:
-          version: default
+      # Check default database location
+      - run:
+          name: Check Default Database Location
+          command: |
+            ls -la /usr/share/dependency-check/data
+            echo "Database files:"
+            find /usr/share/dependency-check/data -type f
 
-      # Pull OWASP Dependency-Check Docker image
+      # Attempt to update the database
       - run:
-          name: Pull OWASP Dependency-Check Docker Image
+          name: Update Dependency-Check Database
           command: |
-            docker pull owasp/dependency-check
-            docker images | grep owasp/dependency-check
-
-      # Sync OWASP Dependency-Check database from S3
-      - run:
-          name: Sync OWASP Database from S3
-          command: |
-            mkdir -p $HOME/OWASP-Dependency-Check/data
-            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
-      
-      # Debug: Verify the OWASP Dependency-Check database was synced
-      - run:
-          name: Check OWASP Database Directory
-          command: |
-            echo "Contents of $HOME/OWASP-Dependency-Check/data:"
-            ls -la $HOME/OWASP-Dependency-Check/data
-            echo "Total size of database directory:"
-            du -sh $HOME/OWASP-Dependency-Check/data
-            echo "File types in the database directory:"
-            file $HOME/OWASP-Dependency-Check/data/*
-
-      # Run OWASP Dependency-Check with the synced database
-      - run:
-          name: Run OWASP Dependency-Check Scan
-          command: |
-            mkdir -p dependency-check-report
-            docker run --rm \
-            -v $(pwd):/src \
-            -v $HOME/OWASP-Dependency-Check/data:/usr/share/dependency-check/data \
-            -v $(pwd)/dependency-check-report:/report \
-            owasp/dependency-check \
-            --scan /src \
-            --format "ALL" \
-            --out /report \
-            --noupdate \
-            --log /report/dependency-check.log
+            /usr/share/dependency-check/bin/dependency-check.sh --updateonly
           no_output_timeout: 30m
 
-      # Debug: Check Report Directory and Log
+      # Verify database after update
       - run:
-          name: Check Report Directory and Log
+          name: Verify Database After Update
           command: |
-            echo "Contents of dependency-check-report:"
-            ls -la dependency-check-report
+            ls -la /usr/share/dependency-check/data
+            echo "Database files after update:"
+            find /usr/share/dependency-check/data -type f
+
+      # Run the actual scan
+      - run:
+          name: Run Dependency-Check Scan
+          command: |
+            mkdir -p /tmp/report
+            /usr/share/dependency-check/bin/dependency-check.sh \
+              --scan /root/project \
+              --format "ALL" \
+              --out /tmp/report \
+              --log /tmp/report/dependency-check.log
+          no_output_timeout: 30m
+
+      # Check scan results
+      - run:
+          name: Check Scan Results
+          command: |
+            echo "Contents of report directory:"
+            ls -la /tmp/report
             echo "Last 50 lines of dependency-check.log:"
-            tail -n 50 dependency-check-report/dependency-check.log
+            tail -n 50 /tmp/report/dependency-check.log
 
       # Save Dependency-Check report as an artifact
       - store_artifacts:
-          path: dependency-check-report
+          path: /tmp/report
           destination: dependency-check-report
 
 workflows:
