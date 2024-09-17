@@ -303,7 +303,7 @@ jobs:
           name: Sync Pre-updated Database from S3
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
-            # aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
 
       # Verify synced database
       - run:
