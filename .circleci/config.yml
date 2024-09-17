@@ -167,7 +167,7 @@ jobs:
             docker pull owasp/dependency-check:latest && \
             docker run --rm \
               --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              owasp/dependency-check:latest --updateonly --log odc.log --verbose
+              owasp/dependency-check:latest --updateonly --log /report/odc.log
       - run:
           name: "Upload ODC Data to S3"
           command: |
