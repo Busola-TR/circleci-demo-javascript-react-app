@@ -151,7 +151,7 @@ jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
     machine:
-      image: owasp/dependency-check:10.0.4  # Use a machine executor with Docker pre-installed
+      image: owasp/dependency-check  # Use a machine executor with Docker pre-installed
     steps:
       - run:
           name: "Install AWS CLI"
