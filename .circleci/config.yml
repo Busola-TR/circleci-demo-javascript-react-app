@@ -159,7 +159,7 @@ jobs:
       - run:
           name: "Install OWASP Dependency-Check"
           command: |
-            mkdir -p /usr/share/dependency-check && \
+            sudo mkdir -p /usr/share/dependency-check && \
             curl -L -o /tmp/dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
             unzip /tmp/dependency-check.zip -d /usr/share/dependency-check && \
             chmod +x /usr/share/dependency-check/bin/dependency-check.sh
