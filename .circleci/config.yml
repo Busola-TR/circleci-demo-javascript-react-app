@@ -158,7 +158,7 @@ jobs:
           command: |
             # Create a folder for the OWASP data
             apt update -y
-            apt install curl jq -y
+            apt install curl jq wget -y
             mkdir owasp-folder
             
             # Fetch the latest Dependency Check version
