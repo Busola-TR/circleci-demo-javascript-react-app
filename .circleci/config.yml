@@ -219,44 +219,55 @@ version: 2.1
 jobs:
   dependency_check:
     docker:
-      - image: circleci/python:3.8  # Or use any image suitable for your environment
+      - image: circleci/python:3.8  # Or any image suitable for your project
     steps:
       - checkout
-      
+
       # Install AWS CLI
       - run:
           name: Install AWS CLI
           command: |
             sudo apt-get update && sudo apt-get install -y awscli
-      
+
       # Setup Docker for running OWASP Dependency-Check
       - setup_remote_docker:
           version: default
-      
+
       # Pull OWASP Dependency-Check Docker image
       - run:
           name: Pull OWASP Dependency-Check Docker Image
           command: docker pull owasp/dependency-check
-      
-      # Download OWASP Dependency-Check database from S3
+
+      # Sync OWASP Dependency-Check database from S3
       - run:
-          name: Download OWASP Dependency-Check database from S3
+          name: Sync OWASP Database from S3
           command: |
-            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data 
+            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
       
-      # Run OWASP Dependency-Check scan
+      # Debug: Verify the OWASP Dependency-Check database was synced
       - run:
-          name: Run OWASP Dependency-Check
+          name: Check OWASP Database Directory
+          command: ls -la $HOME/OWASP-Dependency-Check/data
+
+      # Run OWASP Dependency-Check with the synced database
+      - run:
+          name: Run OWASP Dependency-Check Scan
           command: |
             docker run --rm \
             -v $(pwd):/src \
-            -v /tmp/owasp-db:/usr/share/dependency-check/data \
+            -v $HOME/OWASP-Dependency-Check/data:/usr/share/dependency-check/data \
             -v $(pwd)/dependency-check-report:/report \
             owasp/dependency-check \
             --scan /src \
             --format "ALL" \
-            --out /report
-      
+            --out /report \
+            --verbose
+
+      # Debug: Check Report Directory
+      - run:
+          name: Check Report Directory
+          command: ls -la dependency-check-report
+
       # Save Dependency-Check report as an artifact
       - store_artifacts:
           path: dependency-check-report
@@ -267,6 +278,7 @@ workflows:
   scan_workflow:
     jobs:
       - dependency_check
+
 
 
 
