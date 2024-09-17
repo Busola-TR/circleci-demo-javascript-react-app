@@ -127,6 +127,8 @@
 #       - gitleaks-scan
 #       - semgrep-full-scan
 #       - owasp-dependency-check
+
+
 version: 2.1
 
 workflows:
@@ -137,7 +139,7 @@ workflows:
           filters:
             branches:
               only:
-                - main  # This runs only on the main branch, or use a cron job
+                - main  # This runs only on main branch, or use a cron job
       - run-owasp-scan:
           requires:
             - update-owasp-db  # Ensure it runs after updating
@@ -157,35 +159,32 @@ jobs:
           command: |
             sudo apt-get update && sudo apt-get install -y awscli
       - run:
-          name: "Create Persistent OWASP Dependency-Check Data Directory"
+          name: "Create OWASP Dependency-Check Data Directory"
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
-            docker pull owasp/dependency-check:latest && docker run --rm \
-              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              --volume "$(pwd)":/src:z \
-              --volume "$(pwd)/odc-reports":/report:z \
-              owasp/dependency-check:latest \
-              --updateonly
+            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
+            unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+            $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Upload ODC Data to S3"
           command: |
-            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
+            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://your-s3-bucket/owasp-data --delete
 
-  # Job to pull DB from S3 and run scan
+  # Job to pull DB from S3 and run OWASP Dependency-Check scan
   run-owasp-scan:
     machine:
-      image: ubuntu-2004:202101-01  # Use a machine executor with Docker pre-installed
+      image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
     steps:
       - run:
           name: "Install AWS CLI"
           command: |
             sudo apt-get update && sudo apt-get install -y awscli
-      - checkout
+      - checkout  # Ensure the code is checked out for scanning
       - run:
-          name: "Create Persistent OWASP Dependency-Check Data Directory"
+          name: "Create OWASP Dependency-Check Data Directory"
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
       - run:
@@ -193,23 +192,21 @@ jobs:
           command: |
             aws s3 sync s3://your-s3-bucket/owasp-data $HOME/OWASP-Dependency-Check/data
       - run:
-          name: "Run OWASP Dependency-Check"
+          name: "Run OWASP Dependency-Check Scan"
           command: |
-            mkdir -p $(pwd)/odc-reports && \
-            docker run --rm \
-              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              --volume "$(pwd)":/src:z \
-              --volume "$(pwd)/odc-reports":/report:z \
-              owasp/dependency-check:latest \
-              --scan /src \
-              --format "XML" \
-              --project "My Project" \
-              --out /report/dependency-check-report.xml \
-              --suppression /src/suppression.xml \
-              --failOnCVSS 7
+            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
+            unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+            $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --scan $(pwd) \
+            --format "XML" \
+            --project "My Project" \
+            --out $(pwd)/dependency-check-report.xml \
+            --data $HOME/OWASP-Dependency-Check/data \
+            --suppression $(pwd)/suppression.xml \
+            --failOnCVSS 7
       - store_artifacts:
-          path: odc-reports
+          path: dependency-check-report.xml
           destination: dependency-check-report
+
 
 
 
