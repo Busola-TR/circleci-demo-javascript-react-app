@@ -297,8 +297,8 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
-            pwd
-            ls -la
+            aws s3 cp /home/circleci/project/dependency-check s3://owasp-database/dependency-check --recursive
+            
             
 
       # # Sync pre-updated database from S3
