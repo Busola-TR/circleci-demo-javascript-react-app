@@ -21,115 +21,142 @@ version: 2.1
 #     docker:
 #       - image: cimg/python:3.8  # This image is a good base for installing additional tools
 
-jobs:
-  trivy-scan:
-     docker:
-      - image: cimg/python:3.8
-     steps:
-      - checkout # Checks out your source code
-      - run:
-          name: Update and Install curl, Trivy, and Helm
-          command: |
-            # Update package lists and install necessary packages
-            sudo apt-get update && sudo apt-get install -y curl
+# jobs:
+#   trivy-scan:
+#      docker:
+#       - image: cimg/python:3.8
+#      steps:
+#       - checkout # Checks out your source code
+#       - run:
+#           name: Update and Install curl, Trivy, and Helm
+#           command: |
+#             # Update package lists and install necessary packages
+#             sudo apt-get update && sudo apt-get install -y curl
 
-            # Install Trivy
-            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.54.1
+#             # Install Trivy
+#             curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.54.1
 
-            # Install Helm
-            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
-      - run:
-          name: Verify Trivy Installation and Scan Files
-          command: |
-            # Verify Trivy installation
-            trivy --version
+#             # Install Helm
+#             curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sudo bash
+#       - run:
+#           name: Verify Trivy Installation and Scan Files
+#           command: |
+#             # Verify Trivy installation
+#             trivy --version
 
-            # Scan files in the current directory, including Helm charts
-            # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
-            trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed -o trivy.json . || true
-            # Check Trivy scan result
-            if [ -s trivy.json ]; then
-              echo "Trivy scan results:"
-              cat trivy.json
-            else
-              echo "No vulnerabilities found or an error occurred."
-            fi
-      - store_artifacts:
-          path: trivy.json
-          destination: trivy.json
+#             # Scan files in the current directory, including Helm charts
+#             # trivy fs --skip-files=.git,.github,.circleci --ignore-unfixed .
+#             trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed -o trivy.json . || true
+#             # Check Trivy scan result
+#             if [ -s trivy.json ]; then
+#               echo "Trivy scan results:"
+#               cat trivy.json
+#             else
+#               echo "No vulnerabilities found or an error occurred."
+#             fi
+#       - store_artifacts:
+#           path: trivy.json
+#           destination: trivy.json
             
-  semgrep-full-scan:
-    docker:
-      - image: semgrep/semgrep
-    steps:
-      - checkout
-      - run:
-          name: "Semgrep OSS full scan"
-          command: semgrep ci --config auto --output semgrep.json    
-      - store_artifacts:
-          path: semgrep.json
-          destination: semgrep.json
+#   semgrep-full-scan:
+#     docker:
+#       - image: semgrep/semgrep
+#     steps:
+#       - checkout
+#       - run:
+#           name: "Semgrep OSS full scan"
+#           command: semgrep ci --config auto --output semgrep.json    
+#       - store_artifacts:
+#           path: semgrep.json
+#           destination: semgrep.json
           
-  iac-checkov:
-    docker:
-      - image: bridgecrew/checkov:3.2.238
-    steps:
-      - checkout
-      - run:
-          name: Run Checkov
-          command: |
-            checkov --directory . --output-file checkov.json --output json || true
-      - store_artifacts:
-          path: checkov.json
-          destination: checkov.json
+#   iac-checkov:
+#     docker:
+#       - image: bridgecrew/checkov:3.2.238
+#     steps:
+#       - checkout
+#       - run:
+#           name: Run Checkov
+#           command: |
+#             checkov --directory . --output-file checkov.json --output json || true
+#       - store_artifacts:
+#           path: checkov.json
+#           destination: checkov.json
 
 
 
-  gitleaks-scan:
-    docker:
-      - image: zricethezav/gitleaks:v8.18.4
-    steps:
-      - checkout
-      - run:
-          name: Run Gitleaks Scan
-          command: gitleaks detect --verbose --source . -f json -r gitleaks.json
-      - store_artifacts:
-          path: gitleaks.json
-          destination: gitleaks.json
-      - run:
-          name: Allow Failure
-          command: echo "Gitleaks job allowed to fail" || true
+#   gitleaks-scan:
+#     docker:
+#       - image: zricethezav/gitleaks:v8.18.4
+#     steps:
+#       - checkout
+#       - run:
+#           name: Run Gitleaks Scan
+#           command: gitleaks detect --verbose --source . -f json -r gitleaks.json
+#       - store_artifacts:
+#           path: gitleaks.json
+#           destination: gitleaks.json
+#       - run:
+#           name: Allow Failure
+#           command: echo "Gitleaks job allowed to fail" || true
 
-  owasp-dependency-check:
-    docker:
-      - image: cimg/python:3.8
-    steps:
-      - checkout
-      - setup_remote_docker:
-          version: 20.10.14
-      - run:
-          name: Make Dependency Check Script Executable
-          command: |
-            chmod +x scripts/dependency-check.sh
-      - run:
-          name: Run OWASP Dependency Check
-          command: |
-           ./scripts/dependency-check.sh
-      - store_artifacts:
-          path: odc-reports
-          destination: owasp-dependency-check-reports
+#   owasp-dependency-check:
+#     docker:
+#       - image: cimg/python:3.8
+#     steps:
+#       - checkout
+#       - setup_remote_docker:
+#           version: 20.10.14
+#       - run:
+#           name: Make Dependency Check Script Executable
+#           command: |
+#             chmod +x scripts/dependency-check.sh
+#       - run:
+#           name: Run OWASP Dependency Check
+#           command: |
+#            ./scripts/dependency-check.sh
+#       - store_artifacts:
+#           path: odc-reports
+#           destination: owasp-dependency-check-reports
+# workflows:
+#   version: 2
+#   scan:
+#     jobs:
+#       - trivy-scan
+#       - iac-checkov
+#       - gitleaks-scan
+#       - semgrep-full-scan
+#       - owasp-dependency-check
+
+
+version: 2.1
+
 workflows:
   version: 2
-  scan:
+  nightly-owasp-update:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"  # Runs daily at midnight
+          filters:
+            branches:
+              only:
+                - main
     jobs:
-      - trivy-scan
-      - iac-checkov
-      - gitleaks-scan
-      - semgrep-full-scan
-      - owasp-dependency-check
+      - update-owasp-db
 
-
-
+jobs:
+  update-owasp-db:
+    docker:
+      - image: owasp/dependency-check:latest
+    steps:
+      - run:
+          name: "Update OWASP Dependency-Check Database"
+          command: |
+            dependency-check.sh --updateonly --data /tmp/owasp-data
+      - run:
+          name: "Upload ODC Data to S3"
+          command: |
+            aws s3 sync /tmp/owasp-data s3://owasp-dependency-cache --delete
 
 
 
