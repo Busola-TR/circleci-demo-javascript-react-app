@@ -231,7 +231,7 @@ jobs:
       
       # Setup Docker for running OWASP Dependency-Check
       - setup_remote_docker:
-          version: 20.10.7
+          version: default
       
       # Pull OWASP Dependency-Check Docker image
       - run:
