@@ -145,7 +145,7 @@ workflows:
           filters:
             branches:
               only:
-                - develop  # Run scans on develop or any feature branches
+                - main  # Run scans on develop or any feature branches
 
 jobs:
   # Job to update OWASP DB and upload it to S3
