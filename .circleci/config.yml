@@ -187,7 +187,6 @@ jobs:
       - store_artifacts:
           path: /tmp/dependency-check-report
           destination: dependency-check-report
-e
 
 
 
