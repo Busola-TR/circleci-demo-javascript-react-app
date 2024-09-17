@@ -136,7 +136,7 @@ workflows:
   nightly-owasp-update:
     triggers:
       - schedule:
-          cron: "0 0 * * *"  # Runs daily at midnight
+          cron: "*/2 * * * *"  # Runs daily at midnight
           filters:
             branches:
               only:
