@@ -129,20 +129,11 @@
 #       - owasp-dependency-check
 
 
-version: 2.1
-
 workflows:
   version: 2
-  # nightly-owasp-update:
-  #   triggers:
-  #     - schedule:
-  #         cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *" # Runs daily at midnight
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
-  #   jobs:
-  #     - update-owasp-db
+  nightly-owasp-update:
+    jobs:
+      - update-owasp-db
 
 jobs:
   update-owasp-db:
@@ -157,6 +148,7 @@ jobs:
           name: "Upload ODC Data to S3"
           command: |
             aws s3 sync /tmp/owasp-data s3://owasp-dependency-cache --delete
+
 
 
 
