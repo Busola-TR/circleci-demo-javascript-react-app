@@ -220,6 +220,7 @@ jobs:
   run-owasp-scan:
     docker:
       - image: owasp/dependency-check:latest
+        user: root
     steps:
       - checkout
       - run:
