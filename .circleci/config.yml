@@ -165,9 +165,11 @@ jobs:
           name: "Update OWASP Dependency-Check Database"
           command: |
             set +e  # Disable exit on non-zero status
-             docker pull owasp/dependency-check:latest
-            #  /usr/share/dependency-check/bin/dependency-check.sh \
-              --scan . \
+              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
+              --volume $(pwd):/src:z \
+              --volume $(pwd)/odc-reports:/report:z \
+              owasp/dependency-check:latest \
+              --scan /src \
               --format "XML" \
               --project "My Project" \
               --out /report/dependency-check-report.xml \
