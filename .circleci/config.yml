@@ -245,6 +245,12 @@ jobs:
           destination: dependency
 
 
+workflows:
+  version: 2
+  run-owasp-scan:
+    jobs:
+      - run-owasp-scan
+
 
 
 
