@@ -127,7 +127,6 @@
 #       - gitleaks-scan
 #       - semgrep-full-scan
 #       - owasp-dependency-check
-
 version: 2.1
 
 workflows:
@@ -138,14 +137,14 @@ workflows:
           filters:
             branches:
               only:
-                - main  # This runs only on main branch, or use a cron job
+                - main  # This runs only on the main branch, or use a cron job
       - run-owasp-scan:
           requires:
             - update-owasp-db  # Ensure it runs after updating
           filters:
             branches:
               only:
-                - main  # Run scans on develop or any feature branches
+                - main  # Run scans on the main branch
 
 jobs:
   # Job to update OWASP DB and upload it to S3
@@ -164,22 +163,17 @@ jobs:
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
-            set +e  # Disable exit on non-zero status
+            docker pull owasp/dependency-check:latest && docker run --rm \
               --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              --volume $(pwd):/src:z \
-              --volume $(pwd)/odc-reports:/report:z \
+              --volume "$(pwd)":/src:z \
+              --volume "$(pwd)/odc-reports":/report:z \
               owasp/dependency-check:latest \
-              --scan /src \
-              --format "XML" \
-              --project "My Project" \
-              --out /report/dependency-check-report.xml \
-              --suppression /src/suppression.xml \
-              --failOnCVSS 7
-            set -e  
+              --updateonly
       - run:
           name: "Upload ODC Data to S3"
           command: |
             aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
+
   # Job to pull DB from S3 and run scan
   run-owasp-scan:
     machine:
@@ -202,17 +196,21 @@ jobs:
           name: "Run OWASP Dependency-Check"
           command: |
             mkdir -p $(pwd)/odc-reports && \
-            set +e  # Disable exit on non-zero status
-             /usr/share/dependency-check/bin/dependency-check.sh \
-               --scan . \
-               --format "XML" \
-               --project "My Project" \
-               --out /tmp/dependency-check-report \
-               --suppression suppression.xml \
-               --failOnCVSS 7
+            docker run --rm \
+              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
+              --volume "$(pwd)":/src:z \
+              --volume "$(pwd)/odc-reports":/report:z \
+              owasp/dependency-check:latest \
+              --scan /src \
+              --format "XML" \
+              --project "My Project" \
+              --out /report/dependency-check-report.xml \
+              --suppression /src/suppression.xml \
+              --failOnCVSS 7
       - store_artifacts:
-          path:  /tmp/dependency-check-report
+          path: odc-reports
           destination: dependency-check-report
+
 
 
 
