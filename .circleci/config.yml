@@ -167,7 +167,7 @@ jobs:
             docker pull owasp/dependency-check:latest && \
             docker run --rm \
               --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              owasp/dependency-check:latest --updateonly --log /report/odc.log
+              owasp/dependency-check:latest 
       - run:
           name: "Upload ODC Data to S3"
           command: |
@@ -195,18 +195,16 @@ jobs:
           name: "Run OWASP Dependency-Check"
           command: |
             mkdir -p $(pwd)/odc-reports && \
-            docker pull owasp/dependency-check:latest && \
-            docker run --rm \
-              --volume $(pwd):/src:z \
-              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
-              --volume $(pwd)/odc-reports:/report:z \
-              owasp/dependency-check:latest \
-              --scan /src \
-              --format "ALL" \
-              --project "My Project" \
-              --out /report
+            set +e  # Disable exit on non-zero status
+             /usr/share/dependency-check/bin/dependency-check.sh \
+               --scan . \
+               --format "XML" \
+               --project "My Project" \
+               --out /tmp/dependency-check-report \
+               --suppression suppression.xml \
+               --failOnCVSS 7
       - store_artifacts:
-          path: odc-reports
+          path:  /tmp/dependency-check-report
           destination: dependency-check-report
 
 
