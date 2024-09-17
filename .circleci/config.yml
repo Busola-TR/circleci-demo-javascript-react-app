@@ -216,13 +216,16 @@ version: 2.1
 #           destination: dependency-check-report
 
 
-
 jobs:
   run-owasp-scan:
     docker:
       - image: owasp/dependency-check:latest
     steps:
       - checkout
+      - run:
+          name: "Install AWS CLI"
+          command: |
+            apt-get update && apt-get install -y awscli
       - run:
           name: "Download OWASP Data from S3"
           command: |
@@ -244,6 +247,7 @@ workflows:
   run-owasp-scan:
     jobs:
       - run-owasp-scan
+
 
 
 
