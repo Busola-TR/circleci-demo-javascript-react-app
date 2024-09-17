@@ -129,13 +129,27 @@
 #       - owasp-dependency-check
 
 
+version: 2.1
+
 workflows:
   version: 2
-  nightly-owasp-update:
+  owasp_workflow:
     jobs:
-      - update-owasp-db
+      - update-owasp-db:
+          filters:
+            branches:
+              only:
+                - main  # This runs only on main branch, or use a cron job
+      - run-owasp-scan:
+          requires:
+            - update-owasp-db  # Ensure it runs after updating
+          filters:
+            branches:
+              only:
+                - main  # Run scans on develop or any feature branches
 
 jobs:
+  # Job to update OWASP DB and upload it to S3
   update-owasp-db:
     docker:
       - image: owasp/dependency-check:latest
@@ -147,7 +161,30 @@ jobs:
       - run:
           name: "Upload ODC Data to S3"
           command: |
-            aws s3 sync /tmp/owasp-data s3://owasp-dependency-cache --delete
+            aws s3 sync /tmp/owasp-data s3://your-s3-bucket/owasp-data --delete
+
+  # Job to pull DB from S3 and run scan
+  run-owasp-scan:
+    docker:
+      - image: owasp/dependency-check:latest
+    steps:
+      - checkout
+      - run:
+          name: "Download OWASP Data from S3"
+          command: |
+            aws s3 sync s3://your-s3-bucket/owasp-data /tmp/owasp-data
+      - run:
+          name: "Run OWASP Dependency-Check"
+          command: |
+            dependency-check.sh --scan . \
+              --format "XML" \
+              --project "My Project" \
+              --out /tmp/dependency-check-report \
+              --data /tmp/owasp-data  # Use the downloaded OWASP data
+      - store_artifacts:
+          path: /tmp/dependency-check-report
+          destination: dependency-check-report
+
 
 
 
