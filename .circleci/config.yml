@@ -215,19 +215,18 @@
 #           path: dependency-check-report.xml
 #           destination: dependency-check-report
 
-
 version: 2.1
-
-orbs:
-  aws-cli: circleci/aws-cli@4.1.0
-
 jobs:
   run-owasp-scan:
     docker:
       - image: owasp/dependency-check:latest
+        user: root  # Switch to root user
     steps:
       - checkout
-      - aws-cli/setup  # Use the orb to set up the AWS CLI
+      - run:
+          name: "Install AWS CLI"
+          command: |
+            apk add --no-cache aws-cli
       - run:
           name: "Download OWASP Data from S3"
           command: |
@@ -242,14 +241,14 @@ jobs:
               --data /tmp/owasp-data  # Use the downloaded OWASP data
       - store_artifacts:
           path: /tmp/dependency-check-report
-          destination: dependency
-
+          destination: dependency-check-report
 
 workflows:
   version: 2
   run-owasp-scan:
     jobs:
       - run-owasp-scan
+
 
 
 
