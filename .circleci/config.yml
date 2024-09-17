@@ -225,7 +225,7 @@ jobs:
       - run:
           name: "Install AWS CLI"
           command: |
-            apk add --no-cache aws-cli
+            sudo apk add --no-cache aws-cli
       - run:
           name: "Download OWASP Data from S3"
           command: |
