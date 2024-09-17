@@ -279,53 +279,52 @@
 #     jobs:
 #       - dependency_check
 
-
 version: 2.1
 
 jobs:
   dependency_check:
     docker:
-      - image: owasp/dependency-check:latest
+      - image: cimg/openjdk:17.0
     steps:
       - checkout
 
-      # Check Dependency-Check version
+      # Install AWS CLI and Dependency-Check
       - run:
-          name: Check Dependency-Check Version
-          command: /usr/share/dependency-check/bin/dependency-check.sh --version
-
-      # Check default database location
-      - run:
-          name: Check Default Database Location
+          name: Install AWS CLI and Dependency-Check
           command: |
-            ls -la /usr/share/dependency-check/data
+            sudo apt-get update && sudo apt-get install -y awscli
+            export DC_VERSION="8.3.1"
+            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+            unzip dependency-check-${DC_VERSION}-release.zip
+            rm dependency-check-${DC_VERSION}-release.zip
+
+      # Sync pre-updated database from S3
+      - run:
+          name: Sync Pre-updated Database from S3
+          command: |
+            mkdir -p $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
+
+      # Verify synced database
+      - run:
+          name: Verify Synced Database
+          command: |
+            echo "Contents of $HOME/OWASP-Dependency-Check/data:"
+            ls -la $HOME/OWASP-Dependency-Check/data
             echo "Database files:"
-            find /usr/share/dependency-check/data -type f
+            find $HOME/OWASP-Dependency-Check/data -type f
 
-      # Attempt to update the database
-      - run:
-          name: Update Dependency-Check Database
-          command: |
-            /usr/share/dependency-check/bin/dependency-check.sh --updateonly
-          no_output_timeout: 30m
-
-      # Verify database after update
-      - run:
-          name: Verify Database After Update
-          command: |
-            ls -la /usr/share/dependency-check/data
-            echo "Database files after update:"
-            find /usr/share/dependency-check/data -type f
-
-      # Run the actual scan
+      # Run the scan
       - run:
           name: Run Dependency-Check Scan
           command: |
             mkdir -p /tmp/report
-            /usr/share/dependency-check/bin/dependency-check.sh \
-              --scan /root/project \
+            ./dependency-check/bin/dependency-check.sh \
+              --scan . \
               --format "ALL" \
               --out /tmp/report \
+              --data $HOME/OWASP-Dependency-Check/data \
+              --noupdate \
               --log /tmp/report/dependency-check.log
           no_output_timeout: 30m
 
@@ -348,7 +347,6 @@ workflows:
   scan_workflow:
     jobs:
       - dependency_check
-
 
 
 
