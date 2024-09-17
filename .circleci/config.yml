@@ -131,89 +131,119 @@
 
 version: 2.1
 
-workflows:
-  version: 2
-  owasp_workflow:
-    jobs:
-      - update-owasp-db:
-          filters:
-            branches:
-              only:
-                - main  # This runs only on main branch, or use a cron job
-      - run-owasp-scan:
-          requires:
-            - update-owasp-db  # Ensure it runs after updating
-          filters:
-            branches:
-              only:
-                - main  # Run scans on the main branch
+# workflows:
+#   version: 2
+#   owasp_workflow:
+#     jobs:
+#       - update-owasp-db:
+#           filters:
+#             branches:
+#               only:
+#                 - main  # This runs only on main branch, or use a cron job
+#       - run-owasp-scan:
+#           requires:
+#             - update-owasp-db  # Ensure it runs after updating
+#           filters:
+#             branches:
+#               only:
+#                 - main  # Run scans on the main branch
+
+# jobs:
+#   # Job to update OWASP DB and upload it to S3
+#   update-owasp-db:
+#     machine:
+#       image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
+#     steps:
+#       - run:
+#           name: "Install AWS CLI"
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y awscli unzip curl
+#       - run:
+#           name: "Create OWASP Dependency-Check Data Directory"
+#           command: |
+#             mkdir -p $HOME/OWASP-Dependency-Check/data
+#       - run:
+#           name: "Download and Install OWASP Dependency-Check CLI"
+#           command: |
+#             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip && \
+#             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+#             chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
+#       - run:
+#           name: "Update OWASP Dependency-Check Database"
+#           command: |
+#             $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
+#       - run:
+#           name: "Upload ODC Data to S3"
+#           command: |
+#             aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
+
+#   # Job to pull DB from S3 and run OWASP Dependency-Check scan
+#   run-owasp-scan:
+#     machine:
+#       image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
+#     steps:
+#       - run:
+#           name: "Install AWS CLI"
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y awscli unzip curl
+#       - checkout  # Ensure the code is checked out for scanning
+#       - run:
+#           name: "Create OWASP Dependency-Check Data Directory"
+#           command: |
+#             mkdir -p $HOME/OWASP-Dependency-Check/data
+#       - run:
+#           name: "Download OWASP Data from S3"
+#           command: |
+#             aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
+#       - run:
+#           name: "Download and Install OWASP Dependency-Check CLI"
+#           command: |
+#             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.4.0-release.zip && \
+#             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+#             chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
+#       - run:
+#           name: "Run OWASP Dependency-Check Scan"
+#           command: |
+#             $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --scan $(pwd) \
+#             --format "XML" \
+#             --project "My Project" \
+#             --out $(pwd)/dependency-check-report.xml \
+#             --data $HOME/OWASP-Dependency-Check/data \
+#             --suppression $(pwd)/suppression.xml \
+#             --failOnCVSS 7
+#       - store_artifacts:
+#           path: dependency-check-report.xml
+#           destination: dependency-check-report
+
+
 
 jobs:
-  # Job to update OWASP DB and upload it to S3
-  update-owasp-db:
-    machine:
-      image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
-    steps:
-      - run:
-          name: "Install AWS CLI"
-          command: |
-            sudo apt-get update && sudo apt-get install -y awscli unzip curl
-      - run:
-          name: "Create OWASP Dependency-Check Data Directory"
-          command: |
-            mkdir -p $HOME/OWASP-Dependency-Check/data
-      - run:
-          name: "Download and Install OWASP Dependency-Check CLI"
-          command: |
-            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip && \
-            unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
-            chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
-      - run:
-          name: "Update OWASP Dependency-Check Database"
-          command: |
-            $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
-      - run:
-          name: "Upload ODC Data to S3"
-          command: |
-            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
-
-  # Job to pull DB from S3 and run OWASP Dependency-Check scan
   run-owasp-scan:
-    machine:
-      image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
+    docker:
+      - image: owasp/dependency-check:latest
     steps:
-      - run:
-          name: "Install AWS CLI"
-          command: |
-            sudo apt-get update && sudo apt-get install -y awscli unzip curl
-      - checkout  # Ensure the code is checked out for scanning
-      - run:
-          name: "Create OWASP Dependency-Check Data Directory"
-          command: |
-            mkdir -p $HOME/OWASP-Dependency-Check/data
+      - checkout
       - run:
           name: "Download OWASP Data from S3"
           command: |
-            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-dependency-cache /tmp/owasp-data
       - run:
-          name: "Download and Install OWASP Dependency-Check CLI"
+          name: "Run OWASP Dependency-Check"
           command: |
-            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.4.0-release.zip && \
-            unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
-            chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
-      - run:
-          name: "Run OWASP Dependency-Check Scan"
-          command: |
-            $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --scan $(pwd) \
-            --format "XML" \
-            --project "My Project" \
-            --out $(pwd)/dependency-check-report.xml \
-            --data $HOME/OWASP-Dependency-Check/data \
-            --suppression $(pwd)/suppression.xml \
-            --failOnCVSS 7
+            dependency-check.sh --scan . \
+              --format "XML" \
+              --project "My Project" \
+              --out /tmp/dependency-check-report \
+              --data /tmp/owasp-data  # Use the downloaded OWASP data
       - store_artifacts:
-          path: dependency-check-report.xml
+          path: /tmp/dependency-check-report
           destination: dependency-check-report
+
+workflows:
+  version: 2
+  run-owasp-scan:
+    jobs:
+      - run-owasp-scan
 
 
 
