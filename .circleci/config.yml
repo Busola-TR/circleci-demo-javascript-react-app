@@ -151,7 +151,7 @@ jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
     docker:
-      - image: owasp/dependency-check:latest
+      - image: ubuntu:latest
     steps:
       - run:
           name: "Update OWASP Dependency-Check Database"
