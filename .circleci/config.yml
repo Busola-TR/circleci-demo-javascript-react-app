@@ -140,13 +140,13 @@ workflows:
             branches:
               only:
                 - main  # This runs only on main branch, or use a cron job
-      - run-owasp-scan:
-          requires:
-            - update-owasp-db  # Ensure it runs after updating
-          filters:
-            branches:
-              only:
-                - main  # Run scans on develop or any feature branches
+      # - run-owasp-scan:
+      #     requires:
+      #       - update-owasp-db  # Ensure it runs after updating
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main  # Run scans on develop or any feature branches
 jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
