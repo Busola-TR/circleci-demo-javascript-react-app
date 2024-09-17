@@ -151,7 +151,7 @@ jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
     machine:
-      image: owasp/dependency-check  # Use a machine executor with Docker pre-installed
+      image: ubuntu-2204:2024.05.1  # Use a machine executor with Docker pre-installed
     steps:
       - run:
           name: "Install AWS CLI"
@@ -165,6 +165,7 @@ jobs:
           name: "Update OWASP Dependency-Check Database"
           command: |
             set +e  # Disable exit on non-zero status
+             docker pull owasp/dependency-check:latest
              /usr/share/dependency-check/bin/dependency-check.sh \
               --scan . \
               --format "XML" \
