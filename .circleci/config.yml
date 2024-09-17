@@ -166,18 +166,20 @@ jobs:
           command: |
             docker pull owasp/dependency-check:latest && \
             docker run --rm \
-              /usr/share/dependency-check/bin/dependency-check.sh \
-               --scan . \
-               --format "XML" \
-               --project "My Project" \
-               --out /tmp/dependency-check-report \
-               --suppression suppression.xml \
-               --failOnCVSS 7 
+              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
+              --volume $(pwd):/src:z \
+              --volume $(pwd)/odc-reports:/report:z \
+              owasp/dependency-check:latest \
+              --scan /src \
+              --format "XML" \
+              --project "My Project" \
+              --out /report/dependency-check-report.xml \
+              --suppression /src/suppression.xml \
+              --failOnCVSS 7
       - run:
           name: "Upload ODC Data to S3"
           command: |
             aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
-
   # Job to pull DB from S3 and run scan
   run-owasp-scan:
     machine:
