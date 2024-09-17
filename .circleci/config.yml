@@ -257,7 +257,6 @@ jobs:
             -v $(pwd):/src \
             -v $HOME/OWASP-Dependency-Check/data:/usr/share/dependency-check/data \
             -v $(pwd)/dependency-check-report:/report \
-            ls -la /usr/share/dependency-check/data
             owasp/dependency-check \
             --scan /src \
             --format "ALL" \
