@@ -157,7 +157,11 @@ jobs:
           name: "Update OWASP Dependency-Check Database"
           command: |
             # Create a folder for the OWASP data
-            sudo apt update && apt install -y zip git curl jq
+<<<<<<< HEAD
+            sudo apt update
+            sudo apt install curl jq
+=======
+>>>>>>> a71cd5b29ee00e12fbf7a199c70d7055c3ba95b0
             mkdir owasp-folder
             
             # Fetch the latest Dependency Check version
