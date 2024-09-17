@@ -279,24 +279,93 @@
 #     jobs:
 #       - dependency_check
 
+# version: 2.1
+
+# jobs:
+#   dependency_check:
+#     docker:
+#       - image: cimg/openjdk:17.0
+#     steps:
+#       - checkout
+
+#       # Install AWS CLI and Dependency-Check
+#       - run:
+#           name: Install AWS CLI and Dependency-Check
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y awscli
+#             export DC_VERSION="8.3.1"
+#             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+#             unzip dependency-check-${DC_VERSION}-release.zip
+#             rm dependency-check-${DC_VERSION}-release.zip
+
+#       # Sync pre-updated database from S3
+#       - run:
+#           name: Sync Pre-updated Database from S3
+#           command: |
+#             mkdir -p $HOME/OWASP-Dependency-Check/data
+#             aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
+
+#       # Verify synced database
+#       - run:
+#           name: Verify Synced Database
+#           command: |
+#             echo "Contents of $HOME/OWASP-Dependency-Check/data:"
+#             ls -la $HOME/OWASP-Dependency-Check/data
+#             echo "Database files:"
+#             find $HOME/OWASP-Dependency-Check/data -type f
+
+#       # Run the scan
+#       - run:
+#           name: Run Dependency-Check Scan
+#           command: |
+#             mkdir -p /tmp/report
+#             ./dependency-check/bin/dependency-check.sh \
+#               --scan . \
+#               --format "ALL" \
+#               --out /tmp/report \
+#               --data $HOME/OWASP-Dependency-Check/data \
+#               --noupdate \
+#               --log /tmp/report/dependency-check.log
+#           no_output_timeout: 30m
+
+#       # Check scan results
+#       - run:
+#           name: Check Scan Results
+#           command: |
+#             echo "Contents of report directory:"
+#             ls -la /tmp/report
+#             echo "Last 50 lines of dependency-check.log:"
+#             tail -n 50 /tmp/report/dependency-check.log
+
+#       # Save Dependency-Check report as an artifact
+#       - store_artifacts:
+#           path: /tmp/report
+#           destination: dependency-check-report
+
+# workflows:
+#   version: 2
+#   scan_workflow:
+#     jobs:
+#       - dependency_check
+
+
+
 version: 2.1
 
 jobs:
   dependency_check:
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/base:stable
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 20.10.14
 
-      # Install AWS CLI and Dependency-Check
+      # Install AWS CLI
       - run:
-          name: Install AWS CLI and Dependency-Check
+          name: Install AWS CLI
           command: |
             sudo apt-get update && sudo apt-get install -y awscli
-            export DC_VERSION="8.3.1"
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
-            unzip dependency-check-${DC_VERSION}-release.zip
-            rm dependency-check-${DC_VERSION}-release.zip
 
       # Sync pre-updated database from S3
       - run:
@@ -314,18 +383,20 @@ jobs:
             echo "Database files:"
             find $HOME/OWASP-Dependency-Check/data -type f
 
-      # Run the scan
+      # Run the scan using Docker
       - run:
           name: Run Dependency-Check Scan
           command: |
             mkdir -p /tmp/report
-            ./dependency-check/bin/dependency-check.sh \
-              --scan . \
+            docker run --rm \
+              -v $(pwd):/src \
+              -v $HOME/OWASP-Dependency-Check/data:/usr/share/dependency-check/data \
+              -v /tmp/report:/report \
+              owasp/dependency-check:latest \
+              --scan /src \
               --format "ALL" \
-              --out /tmp/report \
-              --data $HOME/OWASP-Dependency-Check/data \
-              --noupdate \
-              --log /tmp/report/dependency-check.log
+              --out /report \
+              --noupdate
           no_output_timeout: 30m
 
       # Check scan results
@@ -334,8 +405,8 @@ jobs:
           command: |
             echo "Contents of report directory:"
             ls -la /tmp/report
-            echo "Last 50 lines of dependency-check.log:"
-            tail -n 50 /tmp/report/dependency-check.log
+            echo "Last 50 lines of dependency-check.log (if it exists):"
+            tail -n 50 /tmp/report/dependency-check.log || echo "Log file not found"
 
       # Save Dependency-Check report as an artifact
       - store_artifacts:
@@ -347,10 +418,6 @@ workflows:
   scan_workflow:
     jobs:
       - dependency_check
-
-
-
-
 
 
 
