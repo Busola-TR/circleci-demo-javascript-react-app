@@ -165,7 +165,7 @@ jobs:
       - run:
           name: "Download and Install OWASP Dependency-Check CLI"
           command: |
-            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
+            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
             chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
       - run:
@@ -175,7 +175,7 @@ jobs:
       - run:
           name: "Upload ODC Data to S3"
           command: |
-            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://your-s3-bucket/owasp-data --delete
+            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://owasp-dependency-cache/owasp-data --delete
 
   # Job to pull DB from S3 and run OWASP Dependency-Check scan
   run-owasp-scan:
@@ -194,11 +194,11 @@ jobs:
       - run:
           name: "Download OWASP Data from S3"
           command: |
-            aws s3 sync s3://your-s3-bucket/owasp-data $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Download and Install OWASP Dependency-Check CLI"
           command: |
-            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
+            curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.4.0-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
             chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
       - run:
