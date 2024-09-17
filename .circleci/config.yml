@@ -214,41 +214,60 @@
 #       - store_artifacts:
 #           path: dependency-check-report.xml
 #           destination: dependency-check-report
-
 version: 2.1
+
 jobs:
-  run-owasp-scan:
+  dependency_check:
     docker:
-      - image: owasp/dependency-check:latest
-        user: root  # Switch to root user
+      - image: circleci/python:3.8  # Or use any image suitable for your environment
     steps:
       - checkout
+      
+      # Install AWS CLI
       - run:
-          name: "Install AWS CLI"
+          name: Install AWS CLI
           command: |
-            apk add --no-cache aws-cli
+            sudo apt-get update && sudo apt-get install -y awscli
+      
+      # Setup Docker for running OWASP Dependency-Check
+      - setup_remote_docker:
+          version: 20.10.7
+      
+      # Pull OWASP Dependency-Check Docker image
       - run:
-          name: "Download OWASP Data from S3"
-          command: |
-            aws s3 sync s3://owasp-dependency-cache /tmp/owasp-data
+          name: Pull OWASP Dependency-Check Docker Image
+          command: docker pull owasp/dependency-check
+      
+      # Download OWASP Dependency-Check database from S3
       - run:
-          name: "Run OWASP Dependency-Check"
+          name: Download OWASP Dependency-Check database from S3
           command: |
-             $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --scan $(pwd) \
-              --scan . \
-              --format "XML" \
-              --project "My Project" \
-              --out /tmp/dependency-check-report \
-              --data /tmp/owasp-data  # Use the downloaded OWASP data
+            aws s3 sync s3://owasp-dependency-cache/owasp-data $HOME/OWASP-Dependency-Check/data 
+      
+      # Run OWASP Dependency-Check scan
+      - run:
+          name: Run OWASP Dependency-Check
+          command: |
+            docker run --rm \
+            -v $(pwd):/src \
+            -v /tmp/owasp-db:/usr/share/dependency-check/data \
+            -v $(pwd)/dependency-check-report:/report \
+            owasp/dependency-check \
+            --scan /src \
+            --format "ALL" \
+            --out /report
+      
+      # Save Dependency-Check report as an artifact
       - store_artifacts:
-          path: /tmp/dependency-check-report
+          path: dependency-check-report
           destination: dependency-check-report
 
 workflows:
   version: 2
-  run-owasp-scan:
+  scan_workflow:
     jobs:
-      - run-owasp-scan
+      - dependency_check
+
 
 
 
