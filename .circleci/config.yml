@@ -150,8 +150,8 @@ workflows:
 jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
-    docker:
-      - image: cimg/python:3.12.6  # Using a base image to install AWS CLI
+    machine:
+      image: ubuntu-2004:202101-01  # Use a machine executor with Docker pre-installed
     steps:
       - run:
           name: "Install AWS CLI"
@@ -175,8 +175,8 @@ jobs:
 
   # Job to pull DB from S3 and run scan
   run-owasp-scan:
-    docker:
-      - image: cimg/python:3.12.6  # Using a base image to install AWS CLI
+    machine:
+      image: ubuntu-2004:202101-01  # Use a machine executor with Docker pre-installed
     steps:
       - run:
           name: "Install AWS CLI"
@@ -208,6 +208,7 @@ jobs:
       - store_artifacts:
           path: odc-reports
           destination: dependency-check-report
+
 
 
 
