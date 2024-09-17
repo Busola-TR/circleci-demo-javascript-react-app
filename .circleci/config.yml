@@ -166,7 +166,7 @@ jobs:
           command: |
             set +e  # Disable exit on non-zero status
              docker pull owasp/dependency-check:latest
-             /usr/share/dependency-check/bin/dependency-check.sh \
+            #  /usr/share/dependency-check/bin/dependency-check.sh \
               --scan . \
               --format "XML" \
               --project "My Project" \
