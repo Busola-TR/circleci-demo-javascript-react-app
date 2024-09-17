@@ -131,6 +131,7 @@
 version: 2.1
 
 workflows:
+  version: 2
   owasp_workflow:
     jobs:
       - update-owasp-db:
@@ -144,56 +145,70 @@ workflows:
           filters:
             branches:
               only:
-                - main  # Run scans on develop or any feature branches
+                - develop  # Run scans on develop or any feature branches
 
 jobs:
   # Job to update OWASP DB and upload it to S3
   update-owasp-db:
     docker:
-      - image: cimg/python:3.12.6  # Use a base image with AWS CLI installed or install it
+      - image: cimg/python:3.12.6  # Using a base image to install AWS CLI
     steps:
       - run:
-          name: Install Dependencies
+          name: "Install AWS CLI"
           command: |
             sudo apt-get update && sudo apt-get install -y awscli
       - run:
-          name: "Install OWASP Dependency-Check"
+          name: "Create Persistent OWASP Dependency-Check Data Directory"
           command: |
-            sudo mkdir -p $HOME/dependency-check && \
-            curl -L -o /tmp/dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
-            unzip /tmp/dependency-check.zip -d $HOME/dependency-check && \
-            chmod +x $HOME/dependency-check/dependency-check/bin/dependency-check.sh
+            mkdir -p $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
-            $HOME/dependency-check/dependency-check/bin/dependency-check.sh  --updateonly --data /tmp/owasp-data
+            docker pull owasp/dependency-check:latest && \
+            docker run --rm \
+              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
+              owasp/dependency-check:latest --updateonly
       - run:
           name: "Upload ODC Data to S3"
           command: |
-            aws s3 sync /tmp/owasp-data s3://owasp-dependency-cache/owasp-data --delete
+            aws s3 sync $HOME/OWASP-Dependency-Check/data s3://your-s3-bucket/owasp-data --delete
 
-  # Job to pull DB from S3 and run the OWASP scan
+  # Job to pull DB from S3 and run scan
   run-owasp-scan:
     docker:
-      - image: owasp/dependency-check:latest
+      - image: cimg/python:3.12.6  # Using a base image to install AWS CLI
     steps:
+      - run:
+          name: "Install AWS CLI"
+          command: |
+            sudo apt-get update && sudo apt-get install -y awscli
       - checkout
+      - run:
+          name: "Create Persistent OWASP Dependency-Check Data Directory"
+          command: |
+            mkdir -p $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Download OWASP Data from S3"
           command: |
-            aws s3 sync s3://owasp-dependency-cache/owasp-data /tmp/owasp-data
+            aws s3 sync s3://your-s3-bucket/owasp-data $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Run OWASP Dependency-Check"
           command: |
-            /usr/share/dependency-check/bin/dependency-check.sh \
-              --scan . \
+            mkdir -p $(pwd)/odc-reports && \
+            docker pull owasp/dependency-check:latest && \
+            docker run --rm \
+              --volume $(pwd):/src:z \
+              --volume "$HOME/OWASP-Dependency-Check/data":/usr/share/dependency-check/data:z \
+              --volume $(pwd)/odc-reports:/report:z \
+              owasp/dependency-check:latest \
+              --scan /src \
               --format "ALL" \
               --project "My Project" \
-              --out /tmp/dependency-check-report \
-              --data /tmp/owasp-data  # Use the downloaded OWASP data
+              --out /report
       - store_artifacts:
-          path: /tmp/dependency-check-report
+          path: odc-reports
           destination: dependency-check-report
+
 
 
 
