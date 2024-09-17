@@ -157,16 +157,20 @@ jobs:
       - run:
           name: "Install AWS CLI"
           command: |
-            sudo apt-get update && sudo apt-get install -y awscli
+            sudo apt-get update && sudo apt-get install -y awscli unzip curl
       - run:
           name: "Create OWASP Dependency-Check Data Directory"
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
       - run:
-          name: "Update OWASP Dependency-Check Database"
+          name: "Download and Install OWASP Dependency-Check CLI"
           command: |
             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+            chmod +x $HOME/OWASP-Dependency-Check/bin/dependency-check.sh
+      - run:
+          name: "Update OWASP Dependency-Check Database"
+          command: |
             $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Upload ODC Data to S3"
@@ -181,7 +185,7 @@ jobs:
       - run:
           name: "Install AWS CLI"
           command: |
-            sudo apt-get update && sudo apt-get install -y awscli
+            sudo apt-get update && sudo apt-get install -y awscli unzip curl
       - checkout  # Ensure the code is checked out for scanning
       - run:
           name: "Create OWASP Dependency-Check Data Directory"
@@ -192,10 +196,14 @@ jobs:
           command: |
             aws s3 sync s3://your-s3-bucket/owasp-data $HOME/OWASP-Dependency-Check/data
       - run:
-          name: "Run OWASP Dependency-Check Scan"
+          name: "Download and Install OWASP Dependency-Check CLI"
           command: |
             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
+            chmod +x $HOME/OWASP-Dependency-Check/bin/dependency-check.sh
+      - run:
+          name: "Run OWASP Dependency-Check Scan"
+          command: |
             $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --scan $(pwd) \
             --format "XML" \
             --project "My Project" \
@@ -206,6 +214,7 @@ jobs:
       - store_artifacts:
           path: dependency-check-report.xml
           destination: dependency-check-report
+
 
 
 
