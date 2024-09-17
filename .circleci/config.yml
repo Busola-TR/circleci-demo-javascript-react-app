@@ -167,11 +167,11 @@ jobs:
           command: |
             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
-            chmod +x $HOME/OWASP-Dependency-Check/bin/dependency-check.sh
+            chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
-            $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
+            $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --updateonly --data $HOME/OWASP-Dependency-Check/data
       - run:
           name: "Upload ODC Data to S3"
           command: |
@@ -200,11 +200,11 @@ jobs:
           command: |
             curl -L -o dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.1/dependency-check-8.3.1-release.zip && \
             unzip dependency-check.zip -d $HOME/OWASP-Dependency-Check && \
-            chmod +x $HOME/OWASP-Dependency-Check/bin/dependency-check.sh
+            chmod +x $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh
       - run:
           name: "Run OWASP Dependency-Check Scan"
           command: |
-            $HOME/OWASP-Dependency-Check/bin/dependency-check.sh --scan $(pwd) \
+            $HOME/OWASP-Dependency-Check/dependency-check/bin/dependency-check.sh --scan $(pwd) \
             --format "XML" \
             --project "My Project" \
             --out $(pwd)/dependency-check-report.xml \
@@ -214,6 +214,7 @@ jobs:
       - store_artifacts:
           path: dependency-check-report.xml
           destination: dependency-check-report
+
 
 
 
