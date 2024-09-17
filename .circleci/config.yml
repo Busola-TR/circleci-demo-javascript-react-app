@@ -261,7 +261,7 @@ jobs:
             --scan /src \
             --format "ALL" \
             --out /report \
-            --verbose
+            --noupdate
 
       # Debug: Check Report Directory
       - run:
