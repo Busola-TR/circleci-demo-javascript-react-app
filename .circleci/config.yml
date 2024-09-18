@@ -403,12 +403,11 @@ jobs:
           destination: dependency-check-report
 
 
-workflows:
-  version: 2
-  scan_workflow:
-    jobs:
-      - update-owasp-db
-      # - dependency_check
+# workflows:
+#   version: 2
+#   scan_workflow:
+#     jobs:
+#       - dependency_check
 
 
 
