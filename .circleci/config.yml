@@ -300,6 +300,8 @@ jobs:
             aws s3 cp /$HOME/project/dependency-check s3://owasp-database/dependency-check --recursive
             cd /$HOME/project/dependency-check/bin
             ./dependency-check.sh --updateonly
+            pwd
+            ls -la
             # rm -rf /$HOME/project/dependency-check
             
 
