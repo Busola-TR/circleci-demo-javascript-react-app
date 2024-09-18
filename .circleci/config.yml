@@ -366,10 +366,11 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
-      - run:
-          name: "Update OWASP Dependency-Check Database"
-          command: |
-            dependency-check.sh --updateonly --data /tmp/owasp-data
+            ./dependency-check.sh --updateonly --data /tmp/owasp-data
+      # - run:
+      #     name: "Update OWASP Dependency-Check Database"
+      #     command: |
+      #       dependency-check.sh --updateonly --data /tmp/owasp-data
       - run:
           name: "Upload ODC Data to S3"
           command: |
