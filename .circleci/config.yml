@@ -341,35 +341,31 @@
 # #           path: /tmp/report
 # #           destination: dependency-check-report
 
-
-
+# workflows:
+#   version: 2
+#   scan_workflow:
+#     jobs:
+#       - dependency_check
 
 
 version: 2.1
 
-workflows:
-  version: 2
-  owasp_workflow:
-    jobs:
-      - update-owasp-db:
-          filters:
-            branches:
-              only:
-                - main  # This runs only on main branch, or use a cron job
-      - run-owasp-scan:
-          requires:
-            - update-owasp-db  # Ensure it runs after updating
-          filters:
-            branches:
-              only:
-                - main  # Run scans on develop or any feature branches
-
 jobs:
-  # Job to update OWASP DB and upload it to S3
-  update-owasp-db:
+  dependency_check:
     docker:
-      - image: owasp/dependency-check:latest
+      - image: cimg/openjdk:17.0
     steps:
+      - checkout
+
+      # Install AWS CLI and Dependency-Check
+      - run:
+          name: Install AWS CLI and Dependency-Check
+          command: |
+            sudo apt-get update && sudo apt-get install -y awscli
+            export DC_VERSION="8.3.1"
+            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+            unzip dependency-check-${DC_VERSION}-release.zip
+            rm dependency-check-${DC_VERSION}-release.zip
       - run:
           name: "Update OWASP Dependency-Check Database"
           command: |
@@ -378,37 +374,53 @@ jobs:
           name: "Upload ODC Data to S3"
           command: |
             aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
+      # Sync pre-updated database from S3
+      - run:
+          name: Sync Pre-updated Database from S3
+          command: |
+            mkdir -p $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://newbucketbusola/owasp-data $HOME/OWASP-Dependency-Check/data
 
-  # Job to pull DB from S3 and run scan
-  run-owasp-scan:
-    docker:
-      - image: owasp/dependency-check:latest
-    steps:
-      - checkout
+      # Verify synced database
       - run:
-          name: "Download OWASP Data from S3"
+          name: Verify Synced Database
           command: |
-            aws s3 sync s3://newbucketbusola/owasp-data /tmp/owasp-data
+            echo "Contents of $HOME/OWASP-Dependency-Check/data:"
+            ls -la $HOME/OWASP-Dependency-Check/data
+            echo "Database files:"
+            find $HOME/OWASP-Dependency-Check/data -type f
+
+      # Run the scan
       - run:
-          name: "Run OWASP Dependency-Check"
+          name: Run Dependency-Check Scan
           command: |
-            dependency-check.sh --scan . \
-              --format "XML" \
-              --project "My Project" \
-              --out /tmp/dependency-check-report \
-              --data /tmp/owasp-data  # Use the downloaded OWASP data
-              --noupdate
+            mkdir -p /tmp/report
+            ./dependency-check/bin/dependency-check.sh \
+              --scan . \
+              --format "ALL" \
+              --out /tmp/report \
+              --data $HOME/OWASP-Dependency-Check/data \
+              --noupdate \
+              --log /tmp/report/dependency-check.log
+          no_output_timeout: 30m
+
+      # Check scan results
+      - run:
+          name: Check Scan Results
+          command: |
+            echo "Contents of report directory:"
+            ls -la /tmp/report
+            echo "Last 50 lines of dependency-check.log:"
+            tail -n 50 /tmp/report/dependency-check.log
+
+      # Save Dependency-Check report as an artifact
       - store_artifacts:
-          path: /tmp/dependency-check-report
+          path: /tmp/report
           destination: dependency-check-report
 
-
-# workflows:
-#   version: 2
-#   scan_workflow:
-#     jobs:
-#       - dependency_check
-
-
-
+workflows:
+  version: 2
+  scan_workflow:
+    jobs:
+      - dependency_check
 
