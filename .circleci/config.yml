@@ -297,8 +297,8 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
-            aws s3 cp /home/circleci/project/dependency-check s3://owasp-database/dependency-check --recursive
-            rm -rf /home/circleci/project/dependency-check
+            aws s3 cp /$HOME/project/dependency-check s3://owasp-database/dependency-check --recursive
+            rm -rf /$HOME/project/dependency-check
             ls -la
             echo $HOME
             
@@ -308,7 +308,7 @@ jobs:
           name: Sync Pre-updated Database from S3
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
-            aws s3 sync s3://owasp-database/dependency-check $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-database/dependency-check $HOME/.
             
 
       # # Verify synced database
