@@ -314,6 +314,8 @@ jobs:
           name: Run Dependency-Check Scan
           command: |
             mkdir -p /tmp/report
+            pwd
+            ls -la
             ./dependency-check/bin/dependency-check.sh \
               --scan . \
               --format "ALL" \
