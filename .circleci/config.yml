@@ -310,6 +310,8 @@ jobs:
             mkdir -p $HOME/OWASP-Dependency-Check/data
             aws s3 sync s3://owasp-database/dependency-check $HOME/project/dependency-check
             pwd
+            ls -la 
+            cd dependency-check/
             ls -la
             
 
