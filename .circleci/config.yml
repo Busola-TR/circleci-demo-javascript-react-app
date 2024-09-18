@@ -339,11 +339,11 @@ jobs:
 #           path: /tmp/report
 #           destination: dependency-check-report
 
-# workflows:
-#   version: 2
-#   scan_workflow:
-#     jobs:
-#       - dependency_check
+workflows:
+  version: 2
+  scan_workflow:
+    jobs:
+      - dependency_check
 
 
 
