@@ -309,7 +309,8 @@ jobs:
           command: |
             mkdir -p $HOME/OWASP-Dependency-Check/data
             aws s3 sync s3://owasp-database/dependency-check $HOME/.
-            ls -l
+            pwd
+            ls -la
             
 
       # # Verify synced database
