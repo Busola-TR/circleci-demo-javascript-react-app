@@ -366,6 +366,8 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
+            aws s3 cp /$HOME/project/dependency-check s3://owasp-database/dependency-check --recursive
+            cd /$HOME/project/dependency-check/bin
             ./dependency-check.sh --updateonly --data /tmp/owasp-data
       # - run:
       #     name: "Update OWASP Dependency-Check Database"
