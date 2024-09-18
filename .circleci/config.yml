@@ -303,7 +303,7 @@ jobs:
             echo $HOME
             
 
-      Sync pre-updated database from S3
+      # Sync pre-updated database from S3
       - run:
           name: Sync Pre-updated Database from S3
           command: |
