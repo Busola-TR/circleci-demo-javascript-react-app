@@ -440,8 +440,10 @@ jobs:
       - run:
           name: Install AWS CLI and Dependency-Check
           command: |
+            name: Install AWS CLI and Dependency-Check
+          command: |
             sudo apt-get update && sudo apt-get install -y awscli
-            export DC_VERSION="10.4.0"
+            export DC_VERSION="10.0.4"
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
