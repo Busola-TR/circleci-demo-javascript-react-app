@@ -300,14 +300,16 @@ jobs:
             aws s3 cp /home/circleci/project/dependency-check s3://owasp-database/dependency-check --recursive
             rm -rf /home/circleci/project/dependency-check
             ls -la
+            echo $HOME
             
 
-      # Sync pre-updated database from S3
-      # - run:
-      #     name: Sync Pre-updated Database from S3
-      #     command: |
-      #       mkdir -p $HOME/OWASP-Dependency-Check/data
-      #       aws s3 sync s3://owasp-database/dependency-check $HOME/OWASP-Dependency-Check/data
+      Sync pre-updated database from S3
+      - run:
+          name: Sync Pre-updated Database from S3
+          command: |
+            mkdir -p $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://owasp-database/dependency-check $HOME/OWASP-Dependency-Check/data
+            
 
       # # Verify synced database
       # - run:
