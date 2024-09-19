@@ -740,3 +740,6 @@ workflows:
                 - main
     jobs:
       - dependency_check
+manual_check:
+  jobs:
+    - dependency_check
