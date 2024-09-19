@@ -524,3 +524,8 @@ jobs:
           command: |
             mkdir -p /tmp/owasp-data
             ./dependency-check/bin/dependency-check.sh --updateonly --data /tmp/owasp-data
+workflows:
+  version: 2
+  scan_workflow:
+    jobs:
+      - dependency_check
