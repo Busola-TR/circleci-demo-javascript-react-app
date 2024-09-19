@@ -537,6 +537,8 @@
 #                 - main
 #     jobs:
 #       - dependency_check
+
+
 version: 2.1
 
 jobs:
@@ -578,9 +580,11 @@ jobs:
 
             # Extract the latest version and download URL from the response
             LATEST_VERSION=$(echo "$API_RESPONSE" | jq -r .tag_name)
-            DOWNLOAD_URL=$(echo "$API_RESPONSE" | jq -r '.assets[] | select(.name=="dependency-check-'$LATEST_VERSION'-release.zip") | .browser_download_url')
-
             echo "Extracted LATEST_VERSION: $LATEST_VERSION"
+
+            # Find the download URL for the asset named "dependency-check-<version>-release.zip"
+            DOWNLOAD_URL=$(echo "$API_RESPONSE" | jq -r '.assets[] | select(.name | test("dependency-check-.*-release.zip")) | .browser_download_url')
+
             echo "Download URL: $DOWNLOAD_URL"
 
             # Ensure we have a valid LATEST_VERSION and DOWNLOAD_URL
@@ -633,6 +637,7 @@ jobs:
           name: Upload ODC Data to S3
           command: |
             aws s3 sync /tmp/owasp-data s3://$S3_BUCKET/owasp-data --delete
+
 
 
 
