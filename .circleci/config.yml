@@ -733,7 +733,7 @@ workflows:
   hourly_check:
     triggers:
       - schedule:
-          cron: "*/5 * * * *" # This will run the job every hour
+          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *" # This will run the job every hour
           filters:
             branches:
               only:
