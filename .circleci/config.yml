@@ -571,7 +571,7 @@ jobs:
             # Compare the specified version and the latest version from GitHub
             if [ "$SPECIFIED_VERSION" = "$LATEST_VERSION" ]; then
               echo "Specified version $SPECIFIED_VERSION matches the latest version. No update needed."
-              exit 0
+              exit 1
             else
               echo "Specified version $SPECIFIED_VERSION is outdated. Updating to the latest version $LATEST_VERSION."
             fi
