@@ -728,7 +728,7 @@ jobs:
           command: |
             dependency-check.sh --updateonly --data /tmp/owasp-data
 workflows:
-  # every_5_min_check:
+  every_5_min_check:
   #   triggers:
   #     - schedule:
   #         cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"  # Run every 5 minutes (UTC)
