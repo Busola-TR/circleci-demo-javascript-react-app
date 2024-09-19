@@ -499,6 +499,46 @@
 #       - dependency_check
 
 
+# version: 2.1
+
+# jobs:
+#   dependency_check:
+#     docker:
+#       - image: cimg/openjdk:17.0
+#     steps:
+#       - checkout
+
+#       # Install AWS CLI and Dependency-Check
+#       - run:
+#           name: Install AWS CLI and Dependency-Check
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y awscli
+#             export DC_VERSION="10.0.4"
+#             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+#             unzip dependency-check-${DC_VERSION}-release.zip
+#             rm dependency-check-${DC_VERSION}-release.zip
+#             cd /$HOME/project/dependency-check/bin
+#             ./dependency-check.sh --updateonly --data /tmp/owasp-data
+
+#       # Upload ODC Data to S3
+#       - run:
+#           name: "Upload ODC Data to S3"
+#           command: |
+#             aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
+# workflows:
+#   version: 2
+#   hourly_check:
+#     triggers:
+#       - schedule:
+#           cron: "0 * * * *" # This will run the job every hour
+#           filters:
+#             branches:
+#               only:
+#                 - main
+#     jobs:
+#       - dependency_check
+
+
 version: 2.1
 
 jobs:
@@ -508,21 +548,60 @@ jobs:
     steps:
       - checkout
 
-      # Install AWS CLI and Dependency-Check
+      # Install AWS CLI and necessary tools
       - run:
-          name: Install AWS CLI and Dependency-Check
+          name: Install AWS CLI and jq
           command: |
-            sudo apt-get update && sudo apt-get install -y awscli
-            export DC_VERSION="10.0.4"
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
-            unzip dependency-check-${DC_VERSION}-release.zip
-            rm dependency-check-${DC_VERSION}-release.zip
-            cd /$HOME/project/dependency-check/bin
-            ./dependency-check.sh --updateonly --data /tmp/owasp-data
+            sudo apt-get update && sudo apt-get install -y awscli jq curl
 
-      # Upload ODC Data to S3
+      # Check for the latest version of Dependency-Check
       - run:
-          name: "Upload ODC Data to S3"
+          name: Check for latest Dependency-Check version
+          command: |
+            # Fetch the latest version from GitHub API
+            LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
+
+            # Remove the "v" prefix from the version (if present) to get the numeric part
+            LATEST_VERSION=${LATEST_VERSION#v}
+
+            # Path to store the current version
+            VERSION_FILE=".dependency-check-version"
+
+            # Check if the version file exists
+            if [ -f "$VERSION_FILE" ]; then
+              # Read the current version from the file
+              CURRENT_VERSION=$(cat $VERSION_FILE)
+              echo "Current installed Dependency-Check version: $CURRENT_VERSION"
+
+              # Compare current version with the latest version
+              if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+                echo "Dependency-Check is already up to date. No need to update."
+                exit 0
+              else
+                echo "New Dependency-Check version detected. Updating to version $LATEST_VERSION."
+              fi
+            else
+              echo "No previous version found. Installing Dependency-Check version $LATEST_VERSION."
+            fi
+
+            # Download and install the new version
+            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip"
+            unzip dependency-check-${LATEST_VERSION}-release.zip -d dependency-check
+            rm dependency-check-${LATEST_VERSION}-release.zip
+
+            # Update the version file with the new version
+            echo $LATEST_VERSION > $VERSION_FILE
+
+      # Run Dependency-Check update only (no scan)
+      - run:
+          name: Update Dependency-Check Database
+          command: |
+            mkdir -p /tmp/owasp-data
+            ./dependency-check/bin/dependency-check.sh --updateonly --data /tmp/owasp-data
+
+      # Upload the OWASP Dependency-Check data to S3
+      - run:
+          name: Upload ODC Data to S3
           command: |
             aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
 workflows:
