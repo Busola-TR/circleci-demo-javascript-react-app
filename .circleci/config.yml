@@ -517,6 +517,7 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip -d dependency-check
             rm dependency-check-${DC_VERSION}-release.zip
+            cd /$HOME/project/dependency-check/bin
             ./dependency-check.sh --updateonly --data /tmp/owasp-data
 
       # Run Dependency-Check update only (no scan) and upload to S3
