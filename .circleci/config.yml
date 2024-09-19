@@ -525,3 +525,8 @@ jobs:
           name: "Upload ODC Data to S3"
           command: |
             aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
+workflows:
+  version: 2
+  scan_workflow:
+    jobs:
+      - dependency_check
