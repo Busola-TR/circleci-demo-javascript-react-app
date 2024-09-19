@@ -517,13 +517,14 @@ jobs:
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip -d dependency-check
             rm dependency-check-${DC_VERSION}-release.zip
+            ./dependency-check.sh --updateonly --data /tmp/owasp-data
 
       # Run Dependency-Check update only (no scan) and upload to S3
-      - run:
-          name: Update Dependency-Check Database and Upload to S3
-          command: |
-            mkdir -p /tmp/owasp-data
-            ./dependency-check.sh --updateonly --data /tmp/owasp-data
+      # - run:
+      #     name: Update Dependency-Check Database and Upload to S3
+      #     command: |
+      #       mkdir -p /tmp/owasp-data
+            # ./dependency-check.sh --updateonly --data /tmp/owasp-data
 workflows:
   version: 2
   scan_workflow:
