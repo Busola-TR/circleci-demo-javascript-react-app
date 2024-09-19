@@ -700,7 +700,7 @@
 #     jobs:
 #       - dependency_check
 
-
+version: 2.1
 jobs:
   dependency_check:
     docker:
@@ -728,7 +728,6 @@ jobs:
           command: |
             dependency-check.sh --updateonly --data /tmp/owasp-data
 workflows:
-  version: 2.1
   every_5_min_check:
     triggers:
       - schedule:
