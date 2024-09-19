@@ -576,10 +576,10 @@ jobs:
               echo "Specified version $SPECIFIED_VERSION is outdated. Updating to the latest version $LATEST_VERSION."
             fi
 
-            # Download and install the specified version
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${SPECIFIED_VERSION}/dependency-check-${SPECIFIED_VERSION}-release.zip"
-            unzip dependency-check-${SPECIFIED_VERSION}-release.zip -d dependency-check
-            rm dependency-check-${SPECIFIED_VERSION}-release.zip
+            # # Download and install the specified version
+            # wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${SPECIFIED_VERSION}/dependency-check-${SPECIFIED_VERSION}-release.zip"
+            # unzip dependency-check-${SPECIFIED_VERSION}-release.zip -d dependency-check
+            # rm dependency-check-${SPECIFIED_VERSION}-release.zip
 
       #  Install AWS CLI and Dependency-Check
       - run:
