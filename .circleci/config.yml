@@ -727,19 +727,15 @@ jobs:
           name: "Update OWASP Dependency-Check Database"
           command: |
             dependency-check.sh --updateonly --data /tmp/owasp-data
-
 workflows:
-  version: 2
-  hourly_check:
+  version: 2.1
+  every_5_min_check:
     triggers:
       - schedule:
-          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *" # This will run the job every hour
+          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"  # Run every 5 minutes (UTC)
           filters:
             branches:
               only:
                 - main
     jobs:
       - dependency_check
-manual_check:
-  jobs:
-    - dependency_check
