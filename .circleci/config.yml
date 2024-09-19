@@ -554,13 +554,24 @@ jobs:
           command: |
             sudo apt-get update && sudo apt-get install -y awscli jq curl
 
-      # Compare specified version with the latest version from GitHub
+      # Fetch the currently installed version from S3 and compare it with the latest version from GitHub
       - run:
-          name: Check for Dependency-Check version
+          name: Fetch and Compare Versions
           command: |
-            # Your specified version
-            SPECIFIED_VERSION="10.0.4"
-            echo "Specified Dependency-Check version: $SPECIFIED_VERSION"
+            # S3 Bucket and file details
+            S3_BUCKET="newbucketbusola"
+            VERSION_FILE="dependency-check-version.txt"
+            LOCAL_VERSION_FILE=".dependency-check-version"
+
+            # Attempt to fetch the version file from S3
+            if aws s3 cp s3://$S3_BUCKET/$VERSION_FILE $LOCAL_VERSION_FILE --quiet; then
+              echo "Fetched current installed version from S3."
+              CURRENT_VERSION=$(cat $LOCAL_VERSION_FILE)
+            else
+              echo "No previous version found in S3."
+              CURRENT_VERSION="none"
+            fi
+            echo "Current installed Dependency-Check version: $CURRENT_VERSION"
 
             # Fetch the latest version from GitHub API
             LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
@@ -568,36 +579,40 @@ jobs:
             LATEST_VERSION=${LATEST_VERSION#v}
             echo "Latest Dependency-Check version from GitHub: $LATEST_VERSION"
 
-            # Compare the specified version and the latest version from GitHub
-            if [ "$SPECIFIED_VERSION" = "$LATEST_VERSION" ]; then
-              echo "Specified version $SPECIFIED_VERSION matches the latest version. No update needed."
-              exit 1
+            # Compare the current version with the latest version from GitHub
+            if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+              echo "Already up to date with version $LATEST_VERSION. No update needed."
+              exit 0  # Exit successfully without updating
             else
-              echo "Specified version $SPECIFIED_VERSION is outdated. Updating to the latest version $LATEST_VERSION."
+              echo "Updating to the latest version $LATEST_VERSION."
             fi
 
-            # # Download and install the specified version
-            # wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${SPECIFIED_VERSION}/dependency-check-${SPECIFIED_VERSION}-release.zip"
-            # unzip dependency-check-${SPECIFIED_VERSION}-release.zip -d dependency-check
-            # rm dependency-check-${SPECIFIED_VERSION}-release.zip
-
-      #  Install AWS CLI and Dependency-Check
+      # Download and install the latest version
       - run:
-          name: Install AWS CLI and Dependency-Check
+          name: Install Dependency-Check
           command: |
-            sudo apt-get update && sudo apt-get install -y awscli
-            export DC_VERSION="10.0.4"
+           sudo apt-get update && sudo apt-get install -y awscli
             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
             unzip dependency-check-${DC_VERSION}-release.zip
             rm dependency-check-${DC_VERSION}-release.zip
-            cd /$HOME/project/dependency-check/bin
-            ./dependency-check.sh --updateonly --data /tmp/owasp-data
+            # Store the new version locally and upload it to S3 for future runs
+            echo $LATEST_VERSION > .dependency-check-version
+            aws s3 cp .dependency-check-version s3://$S3_BUCKET/$VERSION_FILE
 
-      # Upload ODC Data to S3
+      # Run Dependency-Check update only (no scan)
       - run:
-          name: "Upload ODC Data to S3"
+          name: Update Dependency-Check Database
+          command: |
+            mkdir -p /tmp/owasp-data
+            ./dependency-check/bin/dependency-check.sh --updateonly --data /tmp/owasp-data
+
+      # Upload the OWASP Dependency-Check data to S3
+      - run:
+          name: Upload ODC Data to S3
           command: |
             aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
+
+
 
 workflows:
   version: 2
