@@ -538,7 +538,6 @@
 #     jobs:
 #       - dependency_check
 
-
 version: 2.1
 
 jobs:
@@ -548,102 +547,77 @@ jobs:
     steps:
       - checkout
 
-      # Install AWS CLI and necessary tools
+      # Install AWS CLI and fetch the latest version of Dependency-Check
       - run:
-          name: Install AWS CLI and jq
+          name: Install AWS CLI and Fetch Latest Dependency-Check Version
           command: |
             sudo apt-get update && sudo apt-get install -y awscli jq curl
-
-      # Fetch the currently installed version from S3 and compare it with the latest version from GitHub
-      - run:
-          name: Fetch and Compare Versions
-          command: |
-            # S3 Bucket and file details
-            S3_BUCKET="newbucketbusola"
-            VERSION_FILE="dependency-check-version.txt"
-            LOCAL_VERSION_FILE=".dependency-check-version"
-
-            # Attempt to fetch the version file from S3
-            if aws s3 cp s3://$S3_BUCKET/$VERSION_FILE $LOCAL_VERSION_FILE --quiet; then
-              echo "Fetched current installed version from S3."
-              CURRENT_VERSION=$(cat $LOCAL_VERSION_FILE)
-            else
-              echo "No previous version found in S3."
-              CURRENT_VERSION="none"
-            fi
-            echo "Current installed Dependency-Check version: $CURRENT_VERSION"
-
             # Fetch the latest version from GitHub API
-            echo "Fetching latest version from GitHub API..."
-            API_RESPONSE=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest)
-            echo "API Response: $API_RESPONSE"
+            LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
+            LATEST_VERSION=${LATEST_VERSION#v}  # Remove "v" prefix if present
+            echo "Latest Dependency-Check version: $LATEST_VERSION"
+            # Download the latest release
+            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip"
+            unzip dependency-check-${LATEST_VERSION}-release.zip
+            rm dependency-check-${LATEST_VERSION}-release.zip
+            cd /$HOME/project/dependency-check/bin
+            ./dependency-check.sh --updateonly --data /tmp/owasp-data
 
-            # Extract the latest version and download URL from the response
-            LATEST_VERSION=$(echo "$API_RESPONSE" | jq -r .tag_name)
-            echo "Extracted LATEST_VERSION: $LATEST_VERSION"
-
-            # Find the download URL for the asset named "dependency-check-<version>-release.zip"
-            DOWNLOAD_URL=$(echo "$API_RESPONSE" | jq -r '.assets[] | select(.name | test("dependency-check-.*-release.zip")) | .browser_download_url')
-
-            echo "Download URL: $DOWNLOAD_URL"
-
-            # Ensure we have a valid LATEST_VERSION and DOWNLOAD_URL
-            if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ] || [ -z "$DOWNLOAD_URL" ]; then
-              echo "ERROR: Could not extract the latest version or download URL from GitHub API."
-              exit 1
-            fi
-
-            # Remove "v" prefix from version if present
-            LATEST_VERSION=${LATEST_VERSION#v}
-            echo "Latest Dependency-Check version from GitHub: $LATEST_VERSION"
-
-            # Compare the current version with the latest version from GitHub
-            if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
-              echo "Already up to date with version $LATEST_VERSION. No update needed."
-              exit 0  # Exit successfully without updating
-            else
-              echo "Updating to the latest version $LATEST_VERSION."
-            fi
-
-      # Download and install the latest version
+      # Upload OWASP Dependency-Check data to S3
       - run:
-          name: Install Dependency-Check
+          name: "Upload ODC Data to S3"
           command: |
-            if [ -n "$DOWNLOAD_URL" ]; then
-              echo "Downloading Dependency-Check from $DOWNLOAD_URL"
-              wget "$DOWNLOAD_URL" -O dependency-check-${LATEST_VERSION}-release.zip
-              unzip dependency-check-${LATEST_VERSION}-release.zip
-              rm dependency-check-${LATEST_VERSION}-release.zip
-              cd dependency-check
-              echo "Successfully installed Dependency-Check version $LATEST_VERSION."
-            else
-              echo "DOWNLOAD_URL is empty, cannot download Dependency-Check."
-              exit 1
-            fi
+            aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
 
-            # Store the new version locally and upload it to S3 for future runs
-            echo $LATEST_VERSION > $LOCAL_VERSION_FILE
-            aws s3 cp $LOCAL_VERSION_FILE s3://$S3_BUCKET/$VERSION_FILE
-
-      # Run Dependency-Check update only (no scan)
+      # Sync pre-updated database from S3
       - run:
-          name: Update Dependency-Check Database
+          name: Sync Pre-updated Database from S3
           command: |
-            mkdir -p /tmp/owasp-data
-            ./dependency-check/bin/dependency-check.sh --updateonly --data /tmp/owasp-data
+            mkdir -p $HOME/OWASP-Dependency-Check/data
+            aws s3 sync s3://newbucketbusola/owasp-data $HOME/OWASP-Dependency-Check/data
 
-      # Upload the OWASP Dependency-Check data to S3
+      # Verify synced database
       - run:
-          name: Upload ODC Data to S3
+          name: Verify Synced Database
           command: |
-            aws s3 sync /tmp/owasp-data s3://$S3_BUCKET/owasp-data --delete
+            echo "Contents of $HOME/OWASP-Dependency-Check/data:"
+            ls -la $HOME/OWASP-Dependency-Check/data
+            echo "Database files:"
+            find $HOME/OWASP-Dependency-Check/data -type f
 
+      # Run Dependency-Check scan
+      - run:
+          name: Run Dependency-Check Scan
+          command: |
+            mkdir -p /tmp/report
+            ./dependency-check/bin/dependency-check.sh \
+              --scan . \
+              --format "ALL" \
+              --out /tmp/report \
+              --data $HOME/OWASP-Dependency-Check/data \
+              --noupdate \
+              --log /tmp/report/dependency-check.log
+          no_output_timeout: 30m
 
+      # Check scan results
+      - run:
+          name: Check Scan Results
+          command: |
+            echo "Contents of report directory:"
+            ls -la /tmp/report
+            echo "Last 50 lines of dependency-check.log:"
+            tail -n 50 /tmp/report/dependency-check.log
 
-
+      # Save Dependency-Check report as an artifact
+      - store_artifacts:
+          path: /tmp/report
+          destination: dependency-check-report
 
 workflows:
   version: 2
   scan_workflow:
     jobs:
       - dependency_check
+
+
+
