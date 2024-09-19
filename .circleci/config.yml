@@ -537,7 +537,6 @@
 #                 - main
 #     jobs:
 #       - dependency_check
-
 version: 2.1
 
 jobs:
@@ -573,8 +572,24 @@ jobs:
             echo "Current installed Dependency-Check version: $CURRENT_VERSION"
 
             # Fetch the latest version from GitHub API
-            LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
-            # Remove "v" prefix if present
+            echo "Fetching latest version from GitHub API..."
+            API_RESPONSE=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest)
+            echo "API Response: $API_RESPONSE"
+
+            # Extract the latest version and download URL from the response
+            LATEST_VERSION=$(echo "$API_RESPONSE" | jq -r .tag_name)
+            DOWNLOAD_URL=$(echo "$API_RESPONSE" | jq -r '.assets[] | select(.name=="dependency-check-'$LATEST_VERSION'-release.zip") | .browser_download_url')
+
+            echo "Extracted LATEST_VERSION: $LATEST_VERSION"
+            echo "Download URL: $DOWNLOAD_URL"
+
+            # Ensure we have a valid LATEST_VERSION and DOWNLOAD_URL
+            if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" = "null" ] || [ -z "$DOWNLOAD_URL" ]; then
+              echo "ERROR: Could not extract the latest version or download URL from GitHub API."
+              exit 1
+            fi
+
+            # Remove "v" prefix from version if present
             LATEST_VERSION=${LATEST_VERSION#v}
             echo "Latest Dependency-Check version from GitHub: $LATEST_VERSION"
 
@@ -590,15 +605,15 @@ jobs:
       - run:
           name: Install Dependency-Check
           command: |
-            if [ -n "$LATEST_VERSION" ]; then
-              echo "Downloading Dependency-Check version $LATEST_VERSION"
-              wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip" -O dependency-check-${LATEST_VERSION}-release.zip
+            if [ -n "$DOWNLOAD_URL" ]; then
+              echo "Downloading Dependency-Check from $DOWNLOAD_URL"
+              wget "$DOWNLOAD_URL" -O dependency-check-${LATEST_VERSION}-release.zip
               unzip dependency-check-${LATEST_VERSION}-release.zip
               rm dependency-check-${LATEST_VERSION}-release.zip
               cd dependency-check
               echo "Successfully installed Dependency-Check version $LATEST_VERSION."
             else
-              echo "LATEST_VERSION is empty, cannot download Dependency-Check."
+              echo "DOWNLOAD_URL is empty, cannot download Dependency-Check."
               exit 1
             fi
 
@@ -618,6 +633,8 @@ jobs:
           name: Upload ODC Data to S3
           command: |
             aws s3 sync /tmp/owasp-data s3://$S3_BUCKET/owasp-data --delete
+
+
 
 
 workflows:
