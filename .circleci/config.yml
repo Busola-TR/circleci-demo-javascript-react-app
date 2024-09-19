@@ -591,9 +591,9 @@ jobs:
       - run:
           name: Install Dependency-Check
           command: |
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
-            unzip dependency-check-${DC_VERSION}-release.zip
-            rm dependency-check-${DC_VERSION}-release.zip
+            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip"
+            unzip dependency-check-${LATEST_VERSION}-release.zip
+            rm dependency-check-${LATEST_VERSION}-release.zip
             cd /$HOME/project/dependency-check/bin
             # Store the new version locally and upload it to S3 for future runs
             echo $LATEST_VERSION > .dependency-check-version
