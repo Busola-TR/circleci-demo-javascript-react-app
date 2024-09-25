@@ -360,65 +360,66 @@ jobs:
       - run:
           name: Install AWS CLI and Dependency-Check
           command: |
-            sudo apt-get update && sudo apt-get install -y awscli
-            export DC_VERSION="10.0.4"
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
-            unzip dependency-check-${DC_VERSION}-release.zip
-            rm dependency-check-${DC_VERSION}-release.zip
-            aws s3 cp /$HOME/project/dependency-check s3://newbucketbusola/dependency-check --recursive
-            cd /$HOME/project/dependency-check/bin
-            ./dependency-check.sh --updateonly --data /tmp/owasp-data
+            # sudo apt-get update && sudo apt-get install -y awscli
+            # export DC_VERSION="10.0.4"
+            # wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip"
+            # unzip dependency-check-${DC_VERSION}-release.zip
+            # rm dependency-check-${DC_VERSION}-release.zip
+            # aws s3 cp /$HOME/project/dependency-check s3://newbucketbusola/dependency-check --recursive
+            # cd /$HOME/project/dependency-check/bin
+            # ./dependency-check.sh --updateonly --data /tmp/owasp-data
       # - run:
       #     name: "Update OWASP Dependency-Check Database"
       #     command: |
       #       dependency-check.sh --updateonly --data /tmp/owasp-data
-      - run:
-          name: "Upload ODC Data to S3"
-          command: |
-            aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
+      # - run:
+      #     name: "Upload ODC Data to S3"
+      #     command: |
+      #       aws s3 sync /tmp/owasp-data s3://newbucketbusola/owasp-data --delete
       # Sync pre-updated database from S3
-      - run:
-          name: Sync Pre-updated Database from S3
-          command: |
-            mkdir -p $HOME/OWASP-Dependency-Check/data
-            aws s3 sync s3://newbucketbusola/owasp-data $HOME/OWASP-Dependency-Check/data
+      # - run:
+      #     name: Sync Pre-updated Database from S3
+      #     command: |
+      #       mkdir -p $HOME/OWASP-Dependency-Check/data
+      #       aws s3 sync s3://newbucketbusola/owasp-data $HOME/OWASP-Dependency-Check/data
 
-      # Verify synced database
-      - run:
-          name: Verify Synced Database
-          command: |
-            echo "Contents of $HOME/OWASP-Dependency-Check/data:"
-            ls -la $HOME/OWASP-Dependency-Check/data
-            echo "Database files:"
-            find $HOME/OWASP-Dependency-Check/data -type f
+      # # Verify synced database
+      # - run:
+      #     name: Verify Synced Database
+      #     command: |
+      #       echo "Contents of $HOME/OWASP-Dependency-Check/data:"
+      #       ls -la $HOME/OWASP-Dependency-Check/data
+      #       echo "Database files:"
+      #       find $HOME/OWASP-Dependency-Check/data -type f
 
       # Run the scan
       - run:
           name: Run Dependency-Check Scan
           command: |
-            mkdir -p /tmp/report
-            ./dependency-check/bin/dependency-check.sh \
-              --scan . \
-              --format "ALL" \
-              --out /tmp/report \
-              --data $HOME/OWASP-Dependency-Check/data \
-              --noupdate \
-              --log /tmp/report/dependency-check.log
-          no_output_timeout: 30m
+            echo $HOME
+          #   mkdir -p /tmp/report
+          #   ./dependency-check/bin/dependency-check.sh \
+          #     --scan . \
+          #     --format "ALL" \
+          #     --out /tmp/report \
+          #     --data $HOME/OWASP-Dependency-Check/data \
+          #     --noupdate \
+          #     --log /tmp/report/dependency-check.log
+          # no_output_timeout: 30m
 
-      # Check scan results
-      - run:
-          name: Check Scan Results
-          command: |
-            echo "Contents of report directory:"
-            ls -la /tmp/report
-            echo "Last 50 lines of dependency-check.log:"
-            tail -n 50 /tmp/report/dependency-check.log
+      # # Check scan results
+      # - run:
+      #     name: Check Scan Results
+      #     command: |
+      #       echo "Contents of report directory:"
+      #       ls -la /tmp/report
+      #       echo "Last 50 lines of dependency-check.log:"
+      #       tail -n 50 /tmp/report/dependency-check.log
 
-      # Save Dependency-Check report as an artifact
-      - store_artifacts:
-          path: /tmp/report
-          destination: dependency-check-report
+      # # Save Dependency-Check report as an artifact
+      # - store_artifacts:
+      #     path: /tmp/report
+      #     destination: dependency-check-report
 
 workflows:
   # version: 2
