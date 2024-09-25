@@ -349,7 +349,6 @@
 
 # Busola
 version: 2.1
-
 jobs:
   dependency_check:
     docker:
