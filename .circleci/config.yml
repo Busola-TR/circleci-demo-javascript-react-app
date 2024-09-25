@@ -397,15 +397,15 @@ jobs:
           name: Run Dependency-Check Scan
           command: |
             echo $HOME
-          #   mkdir -p /tmp/report
-          #   ./dependency-check/bin/dependency-check.sh \
-          #     --scan . \
-          #     --format "ALL" \
-          #     --out /tmp/report \
-          #     --data $HOME/OWASP-Dependency-Check/data \
-          #     --noupdate \
-          #     --log /tmp/report/dependency-check.log
-          # no_output_timeout: 30m
+            mkdir -p /tmp/report
+            ./dependency-check/bin/dependency-check.sh \
+              --scan . \
+              --format "ALL" \
+              --out /tmp/report \
+              --data $HOME/OWASP-Dependency-Check/data \
+              --noupdate \
+              --log /tmp/report/dependency-check.log
+          no_output_timeout: 30m
 
       # # Check scan results
       # - run:
@@ -416,10 +416,10 @@ jobs:
       #       echo "Last 50 lines of dependency-check.log:"
       #       tail -n 50 /tmp/report/dependency-check.log
 
-      # # Save Dependency-Check report as an artifact
-      # - store_artifacts:
-      #     path: /tmp/report
-      #     destination: dependency-check-report
+      # Save Dependency-Check report as an artifact
+      - store_artifacts:
+          path: /tmp/report
+          destination: dependency-check-report
 
 workflows:
   # version: 2
