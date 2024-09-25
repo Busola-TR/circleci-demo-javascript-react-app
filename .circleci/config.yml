@@ -699,41 +699,41 @@ workflows:
 #     jobs:
 #       - dependency_check
 
-version: 2.1
-jobs:
-  dependency_check:
-    docker:
-      - image: cimg/openjdk:17.0
-    steps:
-      - checkout
+# version: 2.1
+# jobs:
+#   dependency_check:
+#     docker:
+#       - image: cimg/openjdk:17.0
+#     steps:
+#       - checkout
 
-      # Install AWS CLI and fetch the latest version of Dependency-Check
-      - run:
-          name: Install AWS CLI and Fetch Latest Dependency-Check Version
-          command: |
-            sudo apt-get update && sudo apt-get install -y awscli jq curl
-            # Fetch the latest version from GitHub API
-            LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
-            LATEST_VERSION=${LATEST_VERSION#v}  # Remove "v" prefix if present
-            echo "Latest Dependency-Check version: $LATEST_VERSION"
-            # Download the latest release
-            wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip"
-            unzip dependency-check-${LATEST_VERSION}-release.zip
-            rm dependency-check-${LATEST_VERSION}-release.zip
-            cd /$HOME/project/dependency-check/bin
-            ./dependency-check.sh --updateonly --data /tmp/owasp-data
-      - run:
-          name: "Update OWASP Dependency-Check Database"
-          command: |
-            dependency-check.sh --updateonly --data /tmp/owasp-data
-workflows:
-  every_5_min_check:
-  #   triggers:
-  #     - schedule:
-  #         cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"  # Run every 5 minutes (UTC)
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
-    jobs:
-      - dependency_check
+#       # Install AWS CLI and fetch the latest version of Dependency-Check
+#       - run:
+#           name: Install AWS CLI and Fetch Latest Dependency-Check Version
+#           command: |
+#             sudo apt-get update && sudo apt-get install -y awscli jq curl
+#             # Fetch the latest version from GitHub API
+#             LATEST_VERSION=$(curl -s https://api.github.com/repos/jeremylong/DependencyCheck/releases/latest | jq -r .tag_name)
+#             LATEST_VERSION=${LATEST_VERSION#v}  # Remove "v" prefix if present
+#             echo "Latest Dependency-Check version: $LATEST_VERSION"
+#             # Download the latest release
+#             wget "https://github.com/jeremylong/DependencyCheck/releases/download/v${LATEST_VERSION}/dependency-check-${LATEST_VERSION}-release.zip"
+#             unzip dependency-check-${LATEST_VERSION}-release.zip
+#             rm dependency-check-${LATEST_VERSION}-release.zip
+#             cd /$HOME/project/dependency-check/bin
+#             ./dependency-check.sh --updateonly --data /tmp/owasp-data
+#       - run:
+#           name: "Update OWASP Dependency-Check Database"
+#           command: |
+#             dependency-check.sh --updateonly --data /tmp/owasp-data
+# workflows:
+#   every_5_min_check:
+#   #   triggers:
+#   #     - schedule:
+#   #         cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"  # Run every 5 minutes (UTC)
+#   #         filters:
+#   #           branches:
+#   #             only:
+#   #               - main
+#     jobs:
+#       - dependency_check
